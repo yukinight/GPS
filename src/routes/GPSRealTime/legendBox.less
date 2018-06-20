@@ -1,0 +1,40 @@
+@import (reference) "./variable.less";
+
+.legendCt{
+    position: relative;
+    background-color: #FFF;
+    padding: 5px 10px;
+    box-shadow: 0 0 1px 1px #ccc;
+    margin-bottom: 10px;
+    .head{
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 20px;
+        padding: 5px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #aaa;
+        .closeIcon{
+            position: absolute;
+            top:10px;
+            right: 10px;
+            cursor: pointer;
+            &:hover{
+                color: @themeColor;
+            }
+        }
+    } 
+    ul{
+        &:after{
+            content: '.';
+            height: 0;
+            display: block;
+            visibility: hidden;
+            clear: both;
+        }
+        li{
+            float: left;
+            width: 60px;
+            text-align: center;
+        }
+    }
+}

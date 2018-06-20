@@ -1,0 +1,57 @@
+@import (reference) "./variable.less";
+
+.clear{
+    display: block;
+    height: 0;
+    visibility: hidden;
+    clear: both;
+    content:' ';
+}
+.toolBox{
+    position: absolute;
+    right: 10px;
+    top:10px;
+    height: 32px;
+    line-height: 32px;
+    background-color: #FFF;
+    z-index: 3;
+    box-shadow: 0 0 1px 1px #ccc;
+    border-radius: 2px;
+    .menu{
+        float: left;
+        width:100px;
+        text-align: center;
+        button{
+            // height: @barHeight - 8;
+            width: 100%;
+            border:none;
+            border-left: 1px solid #ddd;
+        }
+        &:first-child{
+            button{
+                border:none;
+            }
+        }
+    }
+    &:after{
+        .clear;
+    }
+    .timebox{
+        width:140px;
+        float: left;
+        text-align: center;
+    }
+}
+.menuNode{
+    border-radius: 2px;
+    line-height: 26px;
+    padding: 0 8px;
+    text-align: center;
+    // border-bottom: 1px solid #ccc;
+    
+}
+.selectedNode{
+    .menuNode;
+    background-color: @themeColor;
+    color: #FFF;
+}

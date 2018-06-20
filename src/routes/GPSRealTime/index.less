@@ -1,0 +1,109 @@
+@import (reference) "./variable.less";
+
+.rm{
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+.trackTip{
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 220px;
+    height: 36px;
+    line-height: 36px;
+    margin-left: -50px;
+    font-size: 16px;
+    background-color: darkorange;
+    color: #FFF;
+    z-index: 2;
+    text-align: center;
+    border-radius: 4px;
+    box-shadow: 0 0 2px 2px #ccc;
+}
+
+.treeArea{
+    width: @leftWidth;
+}
+.bottomArea{
+    left: @leftWidth + 20px;
+    right: 10px;
+}
+.toolArea{
+    right: 10px;
+}
+.msgArea{
+    position: absolute;
+    right:10px;
+    top:60px;
+    z-index: 1;
+}
+.videoct{
+    position: absolute;
+    top:0;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    z-index: 2;
+    iframe{
+        display: block;
+        border: none;
+        height: 25%;
+        width: 100%;
+    }
+}
+.narrowLeft{
+    .treeArea{
+        width: @narrowLeftWidth;
+    }
+    .bottomArea{
+        left: @narrowLeftWidth + 20px;
+    }
+}
+.withVideo{
+    .bottomArea{
+        right: @videoWidth + 10px;
+    }
+    .msgArea{
+        right: @videoWidth + 10px;
+    }
+    .toolArea{
+        right: @videoWidth + 10px;
+    }
+    .videoct{
+        width: @videoWidth;
+    }
+}
+.withMapScale{
+    .bottomArea{
+        right: 70px;
+    }
+}
+.pointLabel{
+    background-color: rgba(50,50,50,0.6);
+    color: #FFF;
+    padding: 5px;
+    text-align: center;
+    width:100px;
+    margin-left: -35px !important;
+    border-radius: 5px;
+}
+.widePointLabel{
+    .pointLabel;
+    width:130px;
+    margin-left: -50px !important;
+}
+
+.noVideo{
+    font-size: 20px;
+    color: #FFF;
+    background-color: #000;
+    height: 25%;
+    width: 100%;
+    display: table;
+    &>div{
+        display: table-cell;
+        vertical-align: middle;
+        text-align: center;
+    }
+}

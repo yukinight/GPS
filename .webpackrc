@@ -1,0 +1,42 @@
+{
+  "entry": "src/index.js",
+  "proxy": {
+    "/api": {
+      "target": "http://192.168.1.207:8082/",
+      "changeOrigin": true,
+      "pathRewrite": { "^/api" : "" }
+    },
+    "/lbs": {
+      "target": "http://120.26.218.105:12020/",
+      "changeOrigin": true,
+      "pathRewrite": { "^/lbs" : "" }
+    },
+    "/alarm": {
+      "target": "http://192.168.1.217:18196/",
+      "changeOrigin": true,
+      "pathRewrite": { "^/alarm" : "" }
+    },
+    "/video": {
+      "target": "http://116.62.100.64:18096/",
+      "changeOrigin": true,
+      "pathRewrite": { "^/video" : "" }
+    }
+  },
+  "disableDynamicImport": true,
+  "extraBabelPlugins": [
+    ["import", {"libraryName": "antd", "libraryDirectory": "lib", "style": "css"}, "antd"],
+    ["import", {"libraryName": "vtx-ui", "camel2DashComponentName": false}, "vtx-ui"]
+  ],
+  "env": {
+    "development": {
+      "extraBabelPlugins": [
+        "dva-hmr"
+      ]
+    },
+    "production": {
+      "extraBabelPlugins": [
+        "transform-remove-console"
+      ]
+    }
+  }
+}
