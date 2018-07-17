@@ -1,0 +1,75 @@
+@import (reference) "../GPSRealTime/variable.less";
+
+.bottomPanel,.hiddenBottom{
+    position: absolute;
+    bottom: 10px;
+    background-color: #FFF;
+    // padding-bottom: 36px;
+    z-index: 1;
+    box-shadow: 0 0 1px 1px #ccc;
+    :global{
+        .ant-tabs-bar{
+            margin-bottom: 2px;
+        }
+        .ant-tabs-content{
+            height: 280px;;
+        }
+    }
+    div::-webkit-scrollbar {
+        width: 5px;
+        background-color: hsla(0, 0%, 76%, 0.07);
+    }
+    div::-webkit-scrollbar-thumb {
+        border-radius: 3px;
+        -webkit-box-shadow: inset 0 0 0px rgba(0,0,0,.3);
+        background-color: rgba(193, 193, 193, 0.27);
+    }
+    .infoBar{
+        position: absolute;
+        left:0;
+        right:0;
+        bottom: 0;
+        height: 32px;
+        padding-left: 100px;
+        line-height: 32px;
+        overflow: hidden;
+        .statistic{
+            position: absolute;
+            left:0;
+            top:0;
+            width:100px;
+            color: @themeColor;
+            cursor: pointer;
+        }
+        &>div{
+            display: inline-block;
+            width: 25%;
+            padding: 0 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+    .cornerTool{
+        padding-right: 30px;
+        height:36px;
+        .arrow{
+            position: absolute;
+            right:0;
+            height: 32px;
+            line-height: 32px;
+            width:32px;
+            cursor: pointer;
+            &:hover{
+                color: @themeColor;
+            }
+        }
+    }
+}
+.hiddenBottom{
+    :global{
+        .ant-tabs-content{
+            display: none!important;
+        }
+    }
+}

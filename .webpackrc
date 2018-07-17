@@ -2,7 +2,7 @@
   "entry": "src/index.js",
   "proxy": {
     "/api": {
-      "target": "http://192.168.1.207:8082/",
+      "target": "http://120.26.217.62:19190/",
       "changeOrigin": true,
       "pathRewrite": { "^/api" : "" }
     },
@@ -12,7 +12,7 @@
       "pathRewrite": { "^/lbs" : "" }
     },
     "/alarm": {
-      "target": "http://192.168.1.217:18196/",
+      "target": "http://120.27.248.90:18095/",
       "changeOrigin": true,
       "pathRewrite": { "^/alarm" : "" }
     },
@@ -20,6 +20,11 @@
       "target": "http://116.62.100.64:18096/",
       "changeOrigin": true,
       "pathRewrite": { "^/video" : "" }
+    },
+     "/oilManage": {
+      "target": "http://222.92.212.126:9082/",
+      "changeOrigin": true,
+      "pathRewrite": { "^/oilManage" : "" }
     }
   },
   "disableDynamicImport": true,

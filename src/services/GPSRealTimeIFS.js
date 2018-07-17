@@ -45,7 +45,8 @@ export function carFuzzySearchIFS(postData) {
 // 获取实时车辆数据
 export function getCarsIFS(postData) {
   return request('/api/cloud/gps/api/np/v2/position/gpsLastPositions.smvc',{
-      body:postData
+      body:postData,
+      method:'post'
   });
 }
 
@@ -58,7 +59,7 @@ export function getAddressByLngLatIFS(postData) {
 
 // 获取报警信息
 export function getAlarmInfoIFS(postData) {
-  return request('/alarm/cloud/alarm/api/np/v2/alarmInfo/queryAlarmInfoListByCarIds.smvc',{
+  return request('/alarm/cloud/gps/alarm/api/np/v2/alarmInfo/queryAlarmInfoListByCarIds.smvc',{
       body:postData
   });
 }

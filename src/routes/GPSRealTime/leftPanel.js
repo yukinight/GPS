@@ -6,6 +6,7 @@ import {VtxTree} from 'vtx-ui';
 import ReactEcharts from 'echarts-for-react';
 import RenderInBody from '../../components/renderInBody';
 import {deepEqual} from '../../utils/util';
+import {getNewCarNameTree} from '../../utils/GPSUtil';
 
 class LeftPanel extends React.Component{
     constructor(props){
@@ -72,7 +73,7 @@ class LeftPanel extends React.Component{
         const {treeData,treeConfig} = this.props.data;
         const nodeInfoMenu = treeConfig.filter((item)=>item.id=='treeNodeInfo').pop();
         const shouldShowKeys = nodeInfoMenu?nodeInfoMenu.children.map(item=>{if(item.selected)return item.name}).filter(v=>v):[];
-        return changeCarName(treeData,shouldShowKeys);
+        return getNewCarNameTree(treeData,shouldShowKeys);
     }
     render(){
         const t = this;
@@ -262,62 +263,6 @@ class LeftPanel extends React.Component{
     }
 }
 
-// 根据选择显示字段处理树的显示数据
-function changeCarName(carTreeData,showKeys){
-    if(showKeys.length==0)return carTreeData;
-    
-    return carTreeData.map((item)=>{
-        if(item.isLeaf){
-            let nameArray = showKeys.map((label)=>{
-                switch(label){
-                    case '驾驶员':return item.attributes.driver;
-                    case '状态':return item.attributes.carStatus;
-                    case '统计':return secondToFormatTime(item.attributes.stopTime);
-                    case '车型':return item.attributes.carClasses;
-                    default:return '';
-                }
-            }).filter(val=>val);
-            nameArray.unshift(item.attributes.carCode);
-            return {
-                ...item,
-                name:nameArray.join(' ')
-            }
-        }
-        else if(item.children){
-            return {
-                ...item,
-                children:changeCarName(item.children,showKeys)
-            };
-        }
-        else{
-            return {...item}
-        }
-    })
-}
-
-// 秒转化为时间的格式化字符串
-function secondToFormatTime(times){
-    if(!times)return '';
-    let timeStr='';
-    let remain = parseInt(times);
-
-    let days = parseInt(remain/(24*60*60));
-    if(days || timeStr)timeStr+=`${days}天`;
-   
-    remain = remain%(24*60*60);
-    let hours = parseInt(remain/(60*60))
-    if(hours || timeStr)timeStr+=`${hours}小时`;
-
-    remain = remain%(60*60);
-    let minutes = parseInt(remain/60);
-    if(minutes || timeStr)timeStr+=`${minutes}分`;
-
-    let seconds = remain%60;
-    timeStr+=`${seconds}秒`;
-   
-    return timeStr;
-}
-
 // 树的头部配置
 class TreeHead extends React.Component{
     constructor(props){
@@ -337,7 +282,7 @@ class TreeHead extends React.Component{
         return (
             <div className={style.treeHead}>
                 {
-                    treeConfig.map((item,index)=>(<div key={item.name} className={style.treeHeadNode}>
+                    treeConfig.map((item,index)=>(<div key={item.name} style={{width:`${parseInt(100/treeConfig.length)}%`}} className={style.treeHeadNode}>
                         <Dropdown overlay={genMenu({menuIndex:index,menuOptions:item.children,optionSelect:treeCfgSelect})} placement="bottomCenter">
                             <Button>
                                 {item.name}

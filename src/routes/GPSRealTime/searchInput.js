@@ -1,6 +1,6 @@
 import React from 'react';
 import style from './searchInput.less';
-import {Select,Icon,Tooltip,Input,AutoComplete} from 'antd';
+import {Select,Icon,Tooltip,AutoComplete} from 'antd';
 const {Option} = Select;
 
 function SearchInput(props) {

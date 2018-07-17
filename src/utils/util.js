@@ -2,6 +2,7 @@ import moment from 'moment';
 import 'moment/locale/zh-cn';
 moment.locale('zh-cn');
 import Immutable from 'immutable';
+
 /*
     时间util类
  */
@@ -322,6 +323,12 @@ export function deepEqual(a,b){
     return Immutable.is(Immutable.fromJS(a),Immutable.fromJS(b));
 }
 
+export function delay(time) {
+    return new Promise((resolve)=>{
+        setTimeout(()=>{resolve()},time);
+    })
+}
+
 export function strToColor(str) {
     const valArr = str.split('').map(c=>c.charCodeAt());
     const sum = valArr.reduce((total, currentValue)=>{
@@ -332,4 +339,21 @@ export function strToColor(str) {
         colorStr += '000000'.substr(0,6-colorStr.length);
     }
     return `#${colorStr}`;
+
+}
+
+export function getBaicPostData(postdata = {}) {
+    return {
+        authParam: {
+            tenantId: VtxUtil.getUrlParam('tenantId'),
+            userId: VtxUtil.getUrlParam('userId')
+        },
+        param: {
+            ...postdata,
+            carClassesCode: 'carClassesCode' in postdata ? postdata.carClassesCode : (VtxUtil.getUrlParam('carClassesCode')||'')
+        },
+        reqMethod: {
+            isJsonP: 1
+        }
+    }
 }

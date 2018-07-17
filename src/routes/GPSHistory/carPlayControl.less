@@ -1,0 +1,105 @@
+@import (reference) "../GPSRealTime/variable.less";
+
+.clear{
+    content: '.';
+    height: 0;
+    visibility: hidden;
+    display: block;
+    clear: both;
+}
+.ct{
+    position: absolute;
+    right:10px;
+    top:60px;
+    &:after{
+        .clear;
+    }
+}
+.foldBar{
+    width:400px;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 20px;
+    border-radius: 3px;
+    box-shadow: 0 0 1px 1px #ccc;
+    background-color: #FFF;
+    margin-bottom: 5px;
+    font-size: 15px;
+    cursor: pointer;
+    &>span{
+        color:@themeColor;
+    }
+}
+.barct{
+    background-color: #fff;
+    border-radius: 2px;
+    width:400px;
+    padding: 15px 20px;
+    box-shadow: 0 0 1px 1px #ccc;
+    overflow: hidden;
+   
+    margin-bottom: 5px;
+    .singleBar{
+        position: relative;
+        padding-left: 60px;
+        height: 40px;
+        .barLabel{
+            position: absolute;
+            left:0;
+            top:0;
+        }
+    }
+    .btArea{
+        text-align: center;
+        button{
+            margin: 0 20px;
+        }
+    }
+}
+.sectionCt{
+    width:400px;
+    box-shadow: 0 0 1px 1px #ccc;
+    background-color: #fff;
+    .dataSec{
+        max-height: 260px;
+        overflow: auto;
+        &::-webkit-scrollbar {
+            width: 5px;
+            background-color: hsla(0, 0%, 76%, 0.07);
+        }
+        &::-webkit-scrollbar-thumb {
+            border-radius: 3px;
+            -webkit-box-shadow: inset 0 0 0px rgba(0,0,0,.3);
+            background-color: rgba(193, 193, 193, 0.27);
+        }
+    }
+    .totalRow{
+        background-color: @themeColor;
+        color: #FFF;
+        a{
+            color: #FFF;
+        }
+    }
+}
+.row{
+    height: 35px;
+    line-height: 35px;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+    &:nth-child(even){
+        background-color: #f5f5f5;
+    }
+    &:after{
+        .clear;
+    }
+    li{
+        display: block;
+        float: left;
+        text-align: center;
+        white-space:pre;
+    }
+    li:nth-child(1){width:16%}
+    li:nth-child(2){width:32%}
+    li:nth-child(3){width:32%}
+    li:nth-child(4){width:20%}
+}

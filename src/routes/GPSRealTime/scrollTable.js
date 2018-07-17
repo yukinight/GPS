@@ -12,6 +12,7 @@ class ScrollTable extends React.Component{
             totalHeight:280,
             topIndex:0
         }
+        this.virtualizedTable = null;
     }
     shouldComponentUpdate(nextProps, nextState){
         if(deepEqual(this.state,nextState) && deepEqual(this.props.data,nextProps.data)){
@@ -35,10 +36,17 @@ class ScrollTable extends React.Component{
     deepEqual(a,b){
         return Immutable.is(Immutable.fromJS(a),Immutable.fromJS(b));
     }
+    // 表格滚动到某个index位置
+    scrollToIndex(index){
+        this.virtualizedTable.scrollToPosition(index*this.state.rowHeight);
+    }
     _rowClassName({index}){
         if (index < 0) {
             return styles.headerRow;
-        } else {
+        } else if(index==this.props.data.highlightRowIndex){
+            return styles.highlightRow;
+        }
+        else{
             return index % 2 === 0 ? styles.evenRow : styles.oddRow;
         }
     }
@@ -46,8 +54,8 @@ class ScrollTable extends React.Component{
         return <div className={styles.noRows}>暂无数据</div>;
       }
     render(){
-        const {dispatch,onScroll,rowClick} = this.props;
-        const {columns,tableData} = this.props.data;
+        const {onScroll,rowClick} = this.props;
+        const {columns,tableData,scrollToIndex} = this.props.data;
         const t = this;
         
         return (
@@ -60,18 +68,20 @@ class ScrollTable extends React.Component{
                         const avgWidth = parseInt(restWidth/(columns.length-widthColumns.length));
                         return (
                         <Table
+                            ref={(ins)=>{if(ins)t.virtualizedTable=ins}}
                             width={width}
                             height={t.state.totalHeight}
                             headerHeight={t.state.rowHeight}
                             rowHeight={t.state.rowHeight}
                             headerClassName={styles.cellForIE}
-                            rowClassName={this._rowClassName}
+                            rowClassName={this._rowClassName.bind(t)}
                             noRowsRenderer={this._noRowsRenderer}
                             rowCount={tableData.length}
                             rowGetter={({ index }) => tableData[index]}
                             onRowClick={({event, index, rowData})=>{
-                                rowClick && rowClick(rowData);
+                                rowClick && rowClick(rowData,index);
                             }}
+                            scrollToIndex={scrollToIndex}
                             onScroll={({clientHeight, scrollHeight, scrollTop})=>{
                                 const currentRowIndex = parseInt(scrollTop/t.state.rowHeight);
                                 t.setState({

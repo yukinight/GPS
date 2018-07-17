@@ -1,5 +1,6 @@
 @barHeight: 35px;
-@import (reference) "./variable.less";
+@queryPanelHeight:260px;
+@import (reference) "../GPSRealTime/variable.less";
 
 .clear{
     display: block;
@@ -13,6 +14,7 @@
     top:60px;
     bottom:10px;
     left:10px;
+    // width: @leftWidth;
     transition-property: height;
     transition-duration:.5s;
     z-index: 1;
@@ -21,6 +23,7 @@
     position: absolute;
     top:60px;
     left: 10px;
+    // width: @leftWidth;
     height: @barHeight;
 }
 .bar{
@@ -54,7 +57,13 @@
 }
 
 .treePn{
+    position: relative;
+    padding-top: @barHeight;
+    padding-bottom: @queryPanelHeight;
     .treeHead{
+        position: absolute;
+        top:0;
+        width:100%;
         height: @barHeight;
         line-height: @barHeight;
         box-shadow: 0 0 1px 0 #ccc;
@@ -62,6 +71,7 @@
             .clear;
         }
         .treeHeadNode{
+            width: 50%;
             height: 100%;
             float: left;
             text-align: center;
@@ -79,7 +89,8 @@
         }
     }
     .treeBody{
-        height: calc(~'100% - @{barHeight}');
+        // height: calc(~'100% - @{barHeight}');
+        height: 100%;
         overflow: auto;
         &::-webkit-scrollbar {
             width: 5px;
@@ -90,6 +101,14 @@
             -webkit-box-shadow: inset 0 0 0px rgba(0,0,0,.3);
             background-color: rgba(193, 193, 193, 0.27);
         }
+    }
+    .queryForm{
+        position: absolute;
+        bottom: 0;
+        height: @queryPanelHeight;
+        width: 100%;
+        border-top: 1px solid #ccc;
+        padding: 20px 0;
     }
 }
 
@@ -103,42 +122,23 @@
     .menuNode;
     background-color: @themeColor;
     color: #FFF;
-    
 }
 
 .detailPn{ 
     position: relative;
     background-color: #FFF;
-    .detailHead{
-        position: relative;
-        box-shadow: 0 0 1px 0 #ccc;
+    box-shadow: 0 0 1px 0 #ccc;
+    .toggle_icon{
+        width:30px;
         height: @barHeight;
         line-height: @barHeight;
-        padding: 0 10px;
-        font-size: 14px;
-        .toggle_icon{
-            position: absolute;
-            width:30px;
-            height: @barHeight;
-            top:0;
-            line-height: @barHeight;
-            cursor: pointer;
-            &:hover{
-                color:@themeColor;
-            }
-        }
-        .up{
-            right:30px;
-        }
-        .down{
-            right: 0;
+        cursor: pointer;
+        &:hover{
+            color:@themeColor;
         }
     }
+    
     .detailBody{
-        position: relative;
-        height: calc(~'100% - @{barHeight}');
-        padding: 5px 0;
-        overflow: auto;
         &::-webkit-scrollbar {
             width: 5px;
             background-color: hsla(0, 0%, 76%, 0.07);
@@ -176,11 +176,23 @@
             }
            
         }
+        :global{
+            .ant-tabs{
+                height: 100%;
+            }
+        }
         .buttonCt{
             button{
                 margin-left: 8px;
                 margin-top: 10px;
             }
+        }
+    }
+}
+.hiddenTabs{
+    :global{
+        .ant-tabs-content{
+            display: none!important;
         }
     }
 }

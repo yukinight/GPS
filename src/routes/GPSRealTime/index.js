@@ -24,14 +24,6 @@ class RealTime extends React.Component {
         this.bottomPanelInstance = null; //底部面板实例
         this.refresh = null;//页面刷新定时器
 
-        // 页面组件Props
-        // this.mapProps = {};
-        // this.searchInputProps = {};
-        // this.leftPanelProps = {};
-        // this.bottomPanelProps = {};
-        // this.toolBoxProps = {};
-        // this.legendBoxProps = {};
-        // this.trackTreeProps = {};
         // 事件函数绑定this
         this.updateModel = this.updateModel.bind(this);
         this.drawMarkPointEnd = this.drawMarkPointEnd.bind(this);
@@ -40,7 +32,7 @@ class RealTime extends React.Component {
         this.openMsgWindow = this.openMsgWindow.bind(this);
     }
     componentDidMount(){
-        const {dispatch,refreshInterval} = this.props;
+        const {dispatch} = this.props;
         // 获取通用配置
         dispatch({type:'realTime/getGPSConfig'}).then(()=>{
             // 获取车辆树(树的勾选状态需要等待配置返回才能确定)
@@ -57,9 +49,6 @@ class RealTime extends React.Component {
     }
     componentWillUnmount(){
         clearInterval(this.refresh);
-    }
-    componentWillUpdate(){
-
     }
     // 车辆实时数据,树查询
     search(){

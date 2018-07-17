@@ -4,9 +4,7 @@
     "start": "cross-env BROWSER=none ESLINT=none roadhog dev",
     "build": "cross-env ESLINT=none roadhog build",
     "buildV": "cross-env ESLINT=none roadhog build && node version.control.js",
-    "buildD": "cross-env NO_COMPRESS=none ESLINT=none roadhog build",
-    "lint": "eslint --ext .js src test",
-    "precommit": "npm run lint"
+    "buildD": "cross-env NO_COMPRESS=none ESLINT=none roadhog build"
   },
   "engines": {
     "install-node": "6.9.2"
@@ -22,7 +20,7 @@
     "react-dom": "^15.4.0",
     "react-virtualized": "^9.19.0",
     "updeep": "^1.0.0",
-    "vtx-ui": "*"
+    "vtx-ui": "latest"
   },
   "devDependencies": {
     "babel-plugin-dva-hmr": "^0.4.0",

@@ -5,16 +5,16 @@ import {getGPSConfigIFS,getCarTypeTreeIFS,getCarOrgTreeIFS,getTenantMapInfoIFS,
     sendSchedulingMsgIFS,getCarVideoInfoIFS
 } from '../services/GPSRealTimeIFS';
 import {GPS_ICON} from '../utils/iconMap';
-import {VtxTime} from '../utils/util';
+import {VtxTime,VtxUtil} from '../utils/util';
+import {carTreeDataProcessor} from '../utils/GPSUtil';
 import u from 'updeep';
 import {message} from 'antd';
-import {VtxUtil} from '../utils/util';
 
 const urlmap = VtxUtil.getUrlParam('mapType');
 
 // 用于切换地图
 const mapTypeCfg = {
-    'baidu':{frontEnd:'bmap',backEnd:'bMap',mapCoord:'bd09'},
+    'baidu':{frontEnd:'bd09',backEnd:'bMap',mapCoord:'bd09'},
     'arcgis':{frontEnd:'gmap',backEnd:'',mapCoord:'wgs84'},
 }
 const MAPTYPE = mapTypeCfg[urlmap=='ac'?'arcgis':'baidu'];
@@ -104,7 +104,7 @@ export default {
         // 地图配置项
         mapCfg:{
             mapId:'real_time_map',
-            // mapServer:{type:'gis',url:['http://www.hangzhoumap.gov.cn/Tile/ArcGISFlex/HZTDTVECTORBLEND.gis']},
+            mapServer:{type:'gis',url:['http://www.hangzhoumap.gov.cn/Tile/ArcGISFlex/HZTDTVECTORBLEND.gis']},
             mapZoomLevel:12,
             setZoomLevel:false,
             mapType:MAPTYPE.frontEnd,
@@ -409,7 +409,7 @@ export default {
             const state = yield select(({realTime})=>realTime);
             const clearOldCarInfo = state.pageStatus=='normal';//如果当前页面处于非跟踪状态，应清除上次车辆信息数据，否则应保留
             let postData = {
-                mapType:MAPTYPE.backEnd
+                coordType:MAPTYPE.backEnd
             };
             // 输入框查询条件
             switch(state.searchCfg.searchWay){
@@ -605,8 +605,7 @@ export default {
                         carId,calPointsDistance
                     }
                 })  
-            }
-                      
+            }       
         },
         // 批量更新地址
         batchUpdatePointAddress:[
@@ -1238,75 +1237,6 @@ export default {
 };
 
 // ---------------------------------相关工具函数--------------------------------------
-
-// 处理车辆树的图标
-function getTreeIcon(node) {
-    if(!node.icon){
-        switch(node.nodeType){
-            case 'Root': return GPS_ICON.tree.root;
-            case 'department': return GPS_ICON.tree.department;
-            case 'car':
-                switch(node.attributes.carStatus){
-                    case '行驶在线':return GPS_ICON.tree.carOn;
-                    case '停车在线':return GPS_ICON.tree.carStop;
-                    case '离线':return GPS_ICON.tree.carOff;
-                }
-            default: return '';
-        }
-    }
-    else{
-        return node.icon;
-    }
-}
-
-class carTreeDataProcessor{
-    constructor(rawData){
-        this.treeNodes = [];
-        this.carNodeIds = [];
-        this.parentNodeIds = [];
-        this.newTree = this.generateNewTree(rawData);
-    }
-    generateNewTree(rawData){
-        return rawData.map((item)=>{
-            const {children,...node} = item;
-            this.treeNodes.push(node);
-            if(Array.isArray(item.children) && item.children.length>0){
-                this.parentNodeIds.push(item.id);
-                return {
-                    name: item.name,
-                    key: item.id,
-                    isLeaf: item.nodeType=='car',
-                    img: getTreeIcon(item),
-                    children: this.generateNewTree(item.children)
-                }
-            }
-            else{
-                if(item.nodeType=='car'){
-                    this.carNodeIds.push(item.id);
-                }
-                return {
-                    name: item.name,
-                    key: item.id,
-                    attributes: item.attributes,
-                    isLeaf: item.nodeType=='car',
-                    img: getTreeIcon(item),
-                }
-            }
-        })
-    }
-    getNewTree(){
-        return this.newTree;
-    }
-    getNodes(){
-        return this.treeNodes;
-    }
-    getCarNodeIds(){
-        return this.carNodeIds;
-    }
-    getParentNodeIds(){
-        return this.parentNodeIds;
-    }
-}
 
 function getFormatTime(timestamp){
     const d = new Date(timestamp);
