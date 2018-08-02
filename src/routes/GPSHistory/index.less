@@ -36,3 +36,26 @@
     left:0;
     top:0;
 }
+.exitModeBt{
+    position: absolute;
+    left:50%;
+    top:20px;
+    z-index: 2;
+}
+:global{
+    .trackCarLabel{
+        transform: translate(-50px,-60px);
+        border-radius: 5px;
+        border: 1px solid @themeColor;
+        padding: 3px 5px;
+        color: @themeColor;
+        background-color: #FFF;
+        width:100px;
+        text-align: center;
+    }
+    .stopCarLabel{
+        .trackCarLabel;
+        color: red;
+        border: 1px solid red;
+    }
+}

@@ -7,7 +7,6 @@ const { VtxOptMap } = VtxMap;
 import { REFUEL_ICON } from '../../utils/refuelIcon';
 import LocateMapModal from './LocateMapModal';
 import styles from './NewStationModal.less'
-import { loadConfigurationFromPath } from 'tslint/lib/configuration';
 
 class NewStationModal extends React.Component {
     constructor(props) {

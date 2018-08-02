@@ -2,10 +2,10 @@ import React from 'react';
 import style from './leftPanel.less';
 import st2 from './index.less';
 import {Icon, Tree, Button, Dropdown, Menu} from 'antd';
-import {VtxTree} from 'vtx-ui';
+import {VtxZtree} from 'vtx-ui';
 import ReactEcharts from 'echarts-for-react';
 import RenderInBody from '../../components/renderInBody';
-import {deepEqual} from '../../utils/util';
+import {deepEqual,VtxUtil} from '../../utils/util';
 import {getNewCarNameTree} from '../../utils/GPSUtil';
 
 class LeftPanel extends React.Component{
@@ -74,6 +74,10 @@ class LeftPanel extends React.Component{
         const nodeInfoMenu = treeConfig.filter((item)=>item.id=='treeNodeInfo').pop();
         const shouldShowKeys = nodeInfoMenu?nodeInfoMenu.children.map(item=>{if(item.selected)return item.name}).filter(v=>v):[];
         return getNewCarNameTree(treeData,shouldShowKeys);
+    }
+    jumpToHistory(carId){
+        const carCode = this.props.data.carsInfo[carId].carCode;
+        window.open(`/#/history/?carId=${carId}&carCode=${carCode}&tenantId=${VtxUtil.getUrlParam('tenantId')}&userId=${VtxUtil.getUrlParam('userId')}`)
     }
     render(){
         const t = this;
@@ -175,7 +179,8 @@ class LeftPanel extends React.Component{
             carIsTracking,
             openMsgWindow,
             getVideo,
-            closeVideo
+            closeVideo,
+            jumpToHistory:t.jumpToHistory.bind(t)
         }
         
         const RightClickMenu = <ul className={style.carTreeMenu}>
@@ -191,7 +196,7 @@ class LeftPanel extends React.Component{
                 }}>跟踪车辆</li>
             }
             <li onClick={()=>{
-                
+                t.jumpToHistory(t.state.rightClickMenu.carId);
             }}>历史轨迹</li>
             {
                 videoCfg.showVideo && videoCfg.carId==t.state.rightClickMenu.carId?<li style={{fontWeight:'bold'}} onClick={closeVideo}>关闭视频</li>:<li onClick={()=>{
@@ -312,7 +317,7 @@ class ImmutableTree extends React.Component{
         const TreeProps = {
             ...this.props.data,...this.props.func
         }
-        return (<VtxTree {...TreeProps}/>)
+        return (<VtxZtree {...TreeProps}/>)
     }
 }
 
@@ -353,7 +358,8 @@ class DetailPn extends React.Component{
         const {carInfo,pageStatus,pointType,gasStationInfo,ifShowOil,ifShowRpm,
             videoCfg} = this.props.data;
         // 函数
-        const {trackOneCar,stopTrack,carIsTracking,openMsgWindow,getVideo,closeVideo} = this.props;
+        const {trackOneCar,stopTrack,carIsTracking,openMsgWindow,getVideo,closeVideo,
+            jumpToHistory} = this.props;
         // 车辆信息
         const {driver,driverPhone,carCode,carClassesName,companyName,analog0,
             speed,oilMass,equipmentTime,carStatus,currentAddress} = carInfo;
@@ -532,7 +538,9 @@ class DetailPn extends React.Component{
                                         trackOneCar(carInfo.carId);
                                     }}>跟踪车辆</Button>   
                                 }
-                                <Button type="primary">历史轨迹</Button>
+                                <Button type="primary" onClick={()=>{
+                                    jumpToHistory(carInfo.carId)
+                                }}>历史轨迹</Button>
                                 {
                                     videoCfg.showVideo && videoCfg.carId==carInfo.carId?<Button type="danger" onClick={()=>{
                                         closeVideo();

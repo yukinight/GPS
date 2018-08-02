@@ -1,8 +1,9 @@
 import {GPS_ICON} from '../utils/iconMap';
 import u from 'updeep';
+import moment from 'moment';
 import {message} from 'antd';
 import {VtxTime,VtxUtil,delay} from '../utils/util';
-import {carTreeDataProcessor,secondToFormatTime} from '../utils/GPSUtil';
+import {carTreeDataProcessor,secondToFormatTime,mapTypeCfg} from '../utils/GPSUtil';
 import {getGPSConfigIFS,getCarTypeTreeIFS,getCarOrgTreeIFS,getTenantMapInfoIFS,
     driverFuzzySearchIFS,carFuzzySearchIFS,getAddressByLngLatIFS,
     getAlarmInfoIFS,getCarOilLineIFS,getFocusAreaListIFS,
@@ -13,12 +14,15 @@ import {getHistoryPositionIFS,getCarStopPositionIFS,
     getAbnormalPointIFS} from '../services/GPSHistoryIFS';
 
 const urlmap = VtxUtil.getUrlParam('mapType');
-// 用于切换地图
-const mapTypeCfg = {
-    'baidu':{frontEnd:'bmap',backEnd:'bMap',mapCoord:'bd09'},
-    'arcgis':{frontEnd:'gmap',backEnd:'',mapCoord:'wgs84'},
-}
-const MAPTYPE = mapTypeCfg[urlmap=='ac'?'arcgis':'baidu'];
+const MAPTYPE = mapTypeCfg[(()=>{
+    switch(urlmap){
+        case 'ac':return 'arcgis';
+        case 'gd':return 'gaode';
+        case 't':return 'tiandi';
+        default:return 'baidu'
+    }
+})()];
+// const MAPTYPE = mapTypeCfg['gaode'];
 
 
 // 历史页面工具栏默认配置
@@ -100,7 +104,7 @@ export default {
         //轨迹查询参数
         trackQueryForm:{
             selectedCarInfo:{},
-            selectPeriod:'',
+            selectPeriod:'today',
             periodOptions:[{
                 id:'today',
                 name:'当日'
@@ -114,8 +118,8 @@ export default {
                 id:'last24hours',
                 name:'最近24小时'
             }],
-            startTime:'',//moment 时间格式
-            endTime:'',//moment 时间格式
+            startTime:moment().startOf('day'),//moment 时间格式
+            endTime:moment().endOf('day'),//moment 时间格式
         },
         // 车辆轨迹点位
         carPositions:[],
@@ -124,7 +128,10 @@ export default {
         // 车辆轨迹线
         carPositionsLine:{},
         // 停车数据
+        stopTimeInterval:10,//停车间隔（分钟）
         carStopInfo:[],
+        // 已选中的停车点位
+        selectedStopCarIndex:null,
         // 加油点位
         refuelingPoints:[],
         selectedRefuelingId:null,
@@ -161,8 +168,10 @@ export default {
             points:[]
         },
         selectedGasStationId:'',
+        // 框选模式
+        selectMode:false,
         // 页面loading状态
-        loading:true,
+        loading:false,
         // 关注区域数据
         focusArea:{},
         // 显示历史轨迹线
@@ -253,7 +262,7 @@ export default {
                 }})
             }
             const {data} = yield call(getTenantMapInfoIFS,{
-                coordType:MAPTYPE.mapCoord
+                coordType:MAPTYPE.backEnd
             });
             if(data && data.data && data.data.longitudeDone && data.data.latitudeDone){
                 const mapCenter = [data.data.longitudeDone,data.data.latitudeDone];
@@ -323,7 +332,7 @@ export default {
             const {initial} = payload||{};
             const state = yield select(({history})=>history);
             const treeCfg = state.leftPanelCfg.treeConfig;
-            let postData = {isRealTime:false};
+            let postData = {isRealTime:true};
             let getTreeDataFunc;
             // 输入框查询条件
             switch(state.carTreeSearchCfg.searchWay){
@@ -386,7 +395,7 @@ export default {
             const {startTime,endTime,locations} = state.selectedArea;
             const {data} = yield call(getTreeDataByAreaIFS,{
                 nearType:'box',
-                coordType:MAPTYPE.mapCoord,
+                coordType:MAPTYPE.backEnd,
                 startTime,endTime,
                 locations
             })
@@ -517,16 +526,25 @@ export default {
         getCarPath:[function *({ payload }, { call, put, select }) {
             const {carId,carCode,startTime,endTime,startTimeStr,endTimeStr} = payload;
             
+            yield put({
+                type:'save',
+                payload:{loading:true}
+            });
             const {data} = yield call(getHistoryPositionIFS,{
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
-                coordType:MAPTYPE.mapCoord,
+                coordType:MAPTYPE.backEnd,
                 needTracks:1
-            })
+            });
+            yield put({
+                type:'save',
+                payload:{loading:false}
+            });
             if(data && data.data && Array.isArray(data.data.positions)){
                 if(data.data.positions.length==0){
                     message.info('车辆在此时间段内没有轨迹点位');
+                    return ;
                 }
                 yield put({
                     type:'save',
@@ -554,16 +572,19 @@ export default {
                                 color:'#1DA362'
                             }
                         }):u.constant({}),
-                        // mapCfg:{
-                        //     mapLines:data.data.positions.length>1?[{
-                        //         id:`line-${carId}`,
-                        //         paths:data.data.positions.map(item=>[item.longitudeDone,item.latitudeDone]),
-                        //         config:{
-                        //             lineWidth:3,
-                        //             color:'#1DA362'
-                        //         }
-                        //     }]:[]
-                        // }
+                        mapCfg:{
+                            mapVisiblePoints:{fitView:`line-${carId}`,type:'all'},
+                            setVisiblePoints:true
+                        }
+                    } 
+                });
+                yield call(delay,50);
+                yield put({
+                    type:'save',
+                    payload:{
+                        mapCfg:{
+                            setVisiblePoints:false
+                        }
                     }
                 })
             }
@@ -572,15 +593,24 @@ export default {
         getSubPath:[function *({ payload }, { call, put, select }) {
             const {carId,startTimeStr,endTimeStr} = payload;
            
+            yield put({
+                type:'save',
+                payload:{loading:true}
+            });
             const {data} = yield call(getHistoryPositionIFS,{
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
-                coordType:MAPTYPE.mapCoord,
-            })
+                coordType:MAPTYPE.backEnd,
+            });
+            yield put({
+                type:'save',
+                payload:{loading:false}
+            });
             if(data && data.data && Array.isArray(data.data.positions)){
                 if(data.data.positions.length==0){
                     message.info('车辆在此时间段内没有轨迹点位');
+                    return;
                 }
                 yield put({
                     type:'save',
@@ -601,16 +631,19 @@ export default {
                                 color:'#1DA362'
                             }
                         }):u.constant({}),
-                        // mapCfg:{
-                        //     mapLines:data.data.positions.length>1?[{
-                        //         id:`line-${carId}`,
-                        //         paths:data.data.positions.map(item=>[item.longitudeDone,item.latitudeDone]),
-                        //         config:{
-                        //             lineWidth:3,
-                        //             color:'#1DA362'
-                        //         }
-                        //     }]:[]
-                        // }
+                        mapCfg:{
+                            mapVisiblePoints:{fitView:`line-${carId}`,type:'all'},
+                            setVisiblePoints:true
+                        }
+                    }
+                });
+                yield call(delay,50);
+                yield put({
+                    type:'save',
+                    payload:{
+                        mapCfg:{
+                            setVisiblePoints:false
+                        }
                     }
                 })
             }
@@ -636,18 +669,40 @@ export default {
         },{type: 'takeLatest'}],
         // 获取停车分析数据
         getCarStopInfo:[function *({ payload }, { call, put, select }){
-            const {carId,startTimeStr,endTimeStr} = payload;
+            let carId,startTimeStr,endTimeStr;
+            const state = yield select(({history})=>history);
+            const {stopTimeInterval,carPlayCfg,trackQueryForm} = state;
+            // 有传参，用参数
+            if(payload){
+                ({carId,startTimeStr,endTimeStr} = payload);
+            }
+            // 无传参，取state内部数据
+            else{
+                carId = carPlayCfg.carId;
+                if(carPlayCfg.selectedSplitTimeIndex===null){
+                    startTimeStr = trackQueryForm.startTime.format('YYYY-MM-DD HH:mm:SS');
+                    endTimeStr = trackQueryForm.endTime.format('YYYY-MM-DD HH:mm:SS');
+                }
+                else{
+                    startTimeStr = carPlayCfg.splitTimes[carPlayCfg.selectedSplitTimeIndex].startTime;
+                    endTimeStr = carPlayCfg.splitTimes[carPlayCfg.selectedSplitTimeIndex].endTime;
+                }
+            }
+
+            if(!(carId&&startTimeStr&&endTimeStr))return;
+            
             const {data} = yield call(getCarStopPositionIFS,{
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
-                time:600,
-                coordType:MAPTYPE.mapCoord,
+                time:stopTimeInterval*60,
+                coordType:MAPTYPE.backEnd,
             });
             if(data && data.data){
                 yield put({
                     type:'save',
                     payload:{
+                        selectedStopCarIndex:null,
                         carStopInfo:data.data.map((item,index)=>{
                             return {
                                 ...item,
@@ -728,7 +783,7 @@ export default {
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
-                coordType:MAPTYPE.mapCoord,
+                coordType:MAPTYPE.backEnd,
             });
             if(data && data.data){
                 yield put({
@@ -756,7 +811,7 @@ export default {
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
-                coordType:MAPTYPE.mapCoord,
+                coordType:MAPTYPE.backEnd,
             });
             if(data && Array.isArray(data.data)){
                 yield put({
@@ -777,7 +832,7 @@ export default {
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
-                coordType:MAPTYPE.mapCoord,
+                coordType:MAPTYPE.backEnd,
             });
             if(data && Array.isArray(data.data)){
                 yield put({
@@ -815,7 +870,7 @@ export default {
         *getFocusAreaDetail({ payload }, { call, put, select }){
             const {areaId} = payload;
             const {data} = yield call(getFocusAreaDetailIFS,{
-                coordType:MAPTYPE.mapCoord,
+                coordType:MAPTYPE.backEnd,
                 typeId:areaId
             });
            
@@ -833,7 +888,7 @@ export default {
         // 获取加油站数据
         *getGasStation({ payload }, { call, put, select }){
             const {data} = yield call(getGasStationListIFS,{
-                coordType:MAPTYPE.mapCoord
+                coordType:MAPTYPE.backEnd
             })
             if(data && data.data){
                 const mapStationPoints = data.data.map((item)=>{
@@ -872,7 +927,7 @@ export default {
         // 获取维修厂数据
         *getRepairShop({ payload }, { call, put, select }){
             const {data} = yield call(getRepairShopListIFS,{
-                coordType:MAPTYPE.mapCoord
+                coordType:MAPTYPE.backEnd
             })
             if(data && data.data){
                 const mapRepairShopPoints = data.data.map((item)=>{

@@ -12,6 +12,7 @@ class BottomPanel extends React.Component{
         this.state = {
             show:true,
             currentTabKey:'detail',
+            speedLineValue:20,//速度分析警戒线
         }
         this.carPositionTable = null;
     }
@@ -26,9 +27,48 @@ class BottomPanel extends React.Component{
     render(){
         const t = this;
         const {detail,alarm,stop,carPositions,carStopInfo,speedLineData,oilLine,
-            alarmInfo,showStopCar,selectedCarPositionIndex,showOilTab,showAlarmTab} = t.props.data;
-        const {fetchAddressForCarPositions,moveMapTo,clickCarPath} = t.props;
+            alarmInfo,showStopCar,selectedCarPositionIndex,showOilTab,showAlarmTab,
+            stopTimeInterval} = t.props.data;
+        const {fetchAddressForCarPositions,clickCarPath,clickStopCar,
+            updateStopTimeInterval,queryStopList} = t.props;
+        // 右上角工具（包括收起展开按钮，文本框）
         const RightTopCornerTool = <div className={style.cornerTool}>
+            {
+                (function(){
+                    switch(t.state.currentTabKey){
+                        case 'speed':
+                            return (
+                                <span>
+                                    警戒线 <Input style={{width:'40px',display:'inlineBlock'}} value={t.state.speedLineValue} onChange={(e)=>{
+                                        const num = Number(e.target.value);
+                                        if(!isNaN(num)){
+                                            t.setState({
+                                                speedLineValue:num
+                                            })
+                                        }
+                                    }} /> km/h
+                                </span>
+                            );
+                        case 'stop':
+                            return (<span>
+                                停车 <Input style={{width:'40px',display:'inlineBlock'}} value={stopTimeInterval} onChange={(e)=>{
+                                    const num = Number(e.target.value);
+                                    if(!isNaN(num)){
+                                        updateStopTimeInterval(num);
+                                    }
+                                }} /> 分钟
+                                <Button size='small' type='primary' style={{margin:'0 5px'}} onClick={()=>{
+                                    queryStopList();
+                                }}>确定</Button>
+                            </span>);
+                        default:
+                            return null;
+    
+                    }
+                })()
+                
+            }
+            
             {
                 t.state.show?<Icon type="down" className={style.arrow} onClick={()=>{
                     t.toggleBottomPanel();
@@ -50,7 +90,7 @@ class BottomPanel extends React.Component{
             },
             rowClick(rowData,index){
                 clickCarPath(index);
-                moveMapTo({center:[rowData.longitudeDone,rowData.latitudeDone]});                
+                // moveMapTo({center:[rowData.longitudeDone,rowData.latitudeDone]});                
             },
             onScroll(topIndex){
                 const endIndex = topIndex+10>carPositions.length?carPositions.length:topIndex+10;
@@ -71,10 +111,11 @@ class BottomPanel extends React.Component{
                 tableData:carStopInfo,
                 showStopCar,//触发表格重绘
             },
-            rowClick(rowData){
-                if(showStopCar){
-                    moveMapTo({center:[rowData.longitudeDone,rowData.latitudeDone]});
-                }
+            rowClick(rowData,index){
+                clickStopCar(index);
+                // if(showStopCar){
+                //     moveMapTo({center:[rowData.longitudeDone,rowData.latitudeDone]});
+                // }
             },
         }
 
@@ -107,7 +148,7 @@ class BottomPanel extends React.Component{
                         data: [
                             {
                                 name: '',
-                                yAxis: 20
+                                yAxis: t.state.speedLineValue
                             }
                         ]
                     }

@@ -1,18 +1,17 @@
 import React from 'react';
 import {connect} from 'dva';
-import {VtxMap,VtxModal,VtxTree,VtxModalList,VtxDate} from 'vtx-ui';
-import {Spin} from 'antd';
+import {VtxModal,VtxModalList,VtxDate} from 'vtx-ui';
+import { Button } from 'antd';
 import SearchInput from '../GPSRealTime/searchInput';
 import ToolBox from '../GPSRealTime/toolBox';
 import LeftPanel from './leftPanel';
 import BottomPanel from './bottomPanel';
 import TrackMap from './trackMap';
 import CarPlayControl from './carPlayControl';
+import Loading from '../../components/loading';
 import style from './index.less';
 
-import moment from 'moment';
-import {VtxTime,strToColor} from '../../utils/util';
-import {mergeMapElems} from '../../utils/GPSUtil'
+import {VtxTime,strToColor,merge,VtxUtil} from '../../utils/util';
 import {GPS_ICON} from '../../utils/iconMap';
 
 const {VtxDatePicker} = VtxDate;
@@ -42,14 +41,26 @@ class GPSHistory extends React.Component{
         });
         // 获取关注区列表
         dispatch({type:'history/getFocusAreaList'});
+        // 实时页面跳转过来查询车辆轨迹
+        if(VtxUtil.getUrlParam('carId')){
+            this.updateModel({
+                trackQueryForm:{
+                    selectedCarInfo:{
+                        carId:VtxUtil.getUrlParam('carId'),
+                        carCode:decodeURIComponent(VtxUtil.getUrlParam('carCode'))
+                    }
+                }
+            })
+            dispatch({
+                type:'history/searchByCarTimeSlot'
+            })
+        }
     }
     // 车辆历史数据,树查询
     search(){
-        const {dispatch,pageStatus} = this.props;
+        const {dispatch} = this.props;
         dispatch({type:'history/getCarTree'});
-        // if(pageStatus=='normal'){
-        //     dispatch({type:'realTime/getCarPoints'});
-        // }
+        this.clearSelectArea();
     }
     // 选择关注区
     selectFocusArea(areaIndex,menuIndex){
@@ -235,6 +246,7 @@ class GPSHistory extends React.Component{
     // 清除框选车辆面
     clearSelectArea(){
         this.updateModel({
+            selectMode:false,
             mapCfg:{
                 mapRemove:[{id: 'selectArea',type:'draw'}],
                 isRemove:true,
@@ -277,25 +289,25 @@ class GPSHistory extends React.Component{
                 break;
         }
     }
+    // 生成地图停车点位数据
     genMapPointsForStopCar(){
         return this.props.carStopInfo.map((item,index)=>{
             return {
                 id:`stopcar-${index}`,    
                 latitude:item.latitudeDone,
                 longitude:item.longitudeDone,
-                canShowLabel:true,
                 url: GPS_ICON.map.carStop,
                 pointType:'stopCar',
                 config:{
-                    width:30,
-                    height:30,
-                    markerContentX:-15,
-                    markerContentY:-15,
-                    labelContent:item.name
+                    width:33,
+                    height:33,
+                    markerContentX:-16,
+                    markerContentY:-16,
                 }
             }
         })
     }
+    // 生成地图加油点位数据
     genMapPointsForRefuelingPoints(){
         return this.props.refuelingPoints.map((item,index)=>{
             return {
@@ -307,10 +319,13 @@ class GPSHistory extends React.Component{
                 config:{
                     width:32,
                     height:38,
+                    markerContentX:-16,
+                    markerContentY:-38,
                 }
             }
         })
     }
+    // 生成地图异常点位数据
     genMapPointsForAbnormalPoints(){
         return this.props.abnormalPoints.map((item,index)=>{
             return {
@@ -322,9 +337,93 @@ class GPSHistory extends React.Component{
                 config:{
                     width:32,
                     height:38,
+                    markerContentX:-16,
+                    markerContentY:-38,
                 }
             }
         })
+    }
+    // 生成已选中车辆实时点位
+    genMapPointForSelectedPos(){
+        const {carPositions,selectedCarPositionIndex} = this.props
+        if(typeof selectedCarPositionIndex=='number' && carPositions[selectedCarPositionIndex]){
+            const posInfo = carPositions[selectedCarPositionIndex];
+            return [{
+                id:'selectedCarPos',
+                latitude:posInfo.latitudeDone,
+                longitude:posInfo.longitudeDone,
+                url: GPS_ICON.map.selectedPosition,
+                pointType:'selectedPos',
+                config:{
+                    width:13,
+                    height:21,
+                    markerContentX:-7,
+                    markerContentY:-21,
+                }
+            }]
+        }
+        else{
+            return [];
+        }
+    }
+    // 生成已选中车辆停车点位
+    genMapPointForSelectedStopCar(){
+        const {carStopInfo,selectedStopCarIndex} = this.props
+        if(typeof selectedStopCarIndex=='number' && carStopInfo[selectedStopCarIndex]){
+            const posInfo = carStopInfo[selectedStopCarIndex];
+            return [{
+                id:'selectedStopCar',
+                latitude:posInfo.latitudeDone,
+                longitude:posInfo.longitudeDone,
+                url: GPS_ICON.map.selectedStopCar,
+                pointType:'selectedStopCar',
+                config:{
+                    width:33,
+                    height:33,
+                    markerContentX:-16,
+                    markerContentY:-16,
+                    zIndex:1
+                }
+            }]
+        }
+        else{
+            return [];
+        }
+    }
+    // 生成历史轨迹首尾两点
+    genHeadTailPoints(paths){
+        if(Array.isArray(paths) && paths.length>=2){
+            const head = paths[0];
+            const tail = paths[paths.length-1];
+            return [{
+                id:'startPoint',
+                latitude: head[1],
+                longitude: head[0],
+                url: GPS_ICON.map.startPoint,
+                pointType:'startPoint',
+                config:{
+                    width:22,
+                    height:31,
+                    markerContentX:-11,
+                    markerContentY:-31,
+                }
+            },{
+                id:'endPoint',
+                latitude: tail[1],
+                longitude: tail[0],
+                url: GPS_ICON.map.endPoint,
+                pointType:'endPoint',
+                config:{
+                    width:22,
+                    height:31,
+                    markerContentX:-11,
+                    markerContentY:-31,
+                }
+            }]
+        }
+        else{
+            return [];
+        }
     }
     updateModel(obj){
         this.props.dispatch({
@@ -336,13 +435,13 @@ class GPSHistory extends React.Component{
         const t = this;
         const {dispatch,carTreeSearchCfg,mapCfg,bkCfg,leftPanelCfg,trackQueryForm,
             toolboxCfg,carPositions,carPlayCfg,bottomPanelCfg,gasStation,repairShop,
-            carPositionsLine,showHistoryPath,showStopCar,carStopInfo,
+            carPositionsLine,showHistoryPath,showStopCar,carStopInfo,stopTimeInterval,
             selectedCarPositionIndex,selectedArea,loading,selectedRefuelingId,
-            selectedAbnormalId,selectedGasStationId,refuelingPoints,abnormalPoints} = this.props;
+            selectedAbnormalId,selectedGasStationId,refuelingPoints,abnormalPoints,
+            selectMode} = this.props;
 
         // 地图配置变动
         let newMapCfg = {
-            ...mapCfg,
             drawEnd(obj){
                 t.updateModel({
                     mapCfg:{
@@ -363,12 +462,14 @@ class GPSHistory extends React.Component{
                 }
             }
         };
-        
+        // 合并地图参数
+        merge(newMapCfg,mapCfg);
+
         // 关注区增加图元
         const focusAreaMapElems = t.focusAreaDataProcessor();
-        newMapCfg = mergeMapElems(newMapCfg,focusAreaMapElems);
+        merge(newMapCfg,focusAreaMapElems);
         
-        newMapCfg = mergeMapElems(newMapCfg,{
+        merge(newMapCfg,{
             mapPoints:[
                 ...t.genMapPointsForRefuelingPoints(),
                 ...t.genMapPointsForAbnormalPoints()
@@ -376,28 +477,39 @@ class GPSHistory extends React.Component{
         });
         // 是否显示加油站
         if(t.getToolBarStateById('gasStation','selected')){
-            newMapCfg = mergeMapElems(newMapCfg,{
+            merge(newMapCfg,{
                 mapPoints:gasStation.points
             });
         }
         // 是否显示维修厂
         if(t.getToolBarStateById('repairShop','selected')){
-            newMapCfg = mergeMapElems(newMapCfg,{
+            merge(newMapCfg,{
                 mapPoints:repairShop.points
             });
         }
-        // 是否显示历史轨迹线
+        // 是否显示历史轨迹线以及首尾点
         if(showHistoryPath && carPositionsLine.id){
-            newMapCfg = mergeMapElems(newMapCfg,{
-                mapLines:[carPositionsLine]
+            merge(newMapCfg,{
+                mapLines:[carPositionsLine],
+                mapPoints:t.genHeadTailPoints(carPositionsLine.paths),
             });
         }
         // 是否显示停车点位
         if(showStopCar){
-            newMapCfg = mergeMapElems(newMapCfg,{
+            merge(newMapCfg,{
                 mapPoints:t.genMapPointsForStopCar()
             });
         }
+        // 显示已选中的车辆实时点位
+        if(!carPlayCfg.isPlaying){
+            merge(newMapCfg,{
+                mapPoints:t.genMapPointForSelectedPos()
+            });
+        }
+        // 显示已选中的停车点位
+        merge(newMapCfg,{
+            mapPoints:t.genMapPointForSelectedStopCar()
+        });
         
         // 1.地图组件参数
         let mapProps ={
@@ -411,6 +523,8 @@ class GPSHistory extends React.Component{
             // 控制车辆轨迹表格滚动的位置，配合地图的播放功能
             tableScrollToIndex(index){
                 t.bottomPanelInstance.scrollCarPositionTableToIndex(index);
+                t.leftPanelInstance.switchDetailPn('carPosition');
+                t.leftPanelInstance.detailPnToggle('open');
                 t.updateModel({
                     selectedCarPositionIndex:index
                 })
@@ -500,6 +614,7 @@ class GPSHistory extends React.Component{
                 carPositions,
                 carStopInfo,
                 showStopCar,
+                stopTimeInterval,
                 selectedCarPositionIndex,
                 showOilTab:bkCfg.isOil,
                 showAlarmTab:bkCfg.isShowAlarm,
@@ -531,6 +646,7 @@ class GPSHistory extends React.Component{
                     ]
                 }
             },
+            // 获取车辆实际地址
             fetchAddressForCarPositions(startIndex,endIndex){
                 dispatch({
                     type:'history/getAddressForCarPositions',
@@ -539,8 +655,19 @@ class GPSHistory extends React.Component{
                     }
                 });
             },
-            clickStopCar(){
+            // 点击停车记录
+            clickStopCar(index){
+                t.updateModel({
+                    selectedStopCarIndex:index,
+                })
+                dispatch({
+                    type:'history/setMapZoomCenter',
+                    payload:{
+                        center:[carStopInfo[index].longitudeDone,carStopInfo[index].latitudeDone]
+                    }
+                });
             },
+            // 点击车辆轨迹记录
             clickCarPath(index){
                 // 轨迹播放时忽略点击事件
                 if(!carPlayCfg.isPlaying){
@@ -549,14 +676,24 @@ class GPSHistory extends React.Component{
                     t.updateModel({
                         selectedCarPositionIndex:index,
                     })
+                    dispatch({
+                        type:'history/setMapZoomCenter',
+                        payload:{
+                            center:[carPositions[index].longitudeDone,carPositions[index].latitudeDone]
+                        }
+                    });
                 }
             },
-            moveMapTo({zoom,center}){
+            // 更新停车间隔时间
+            updateStopTimeInterval(val){
+                t.updateModel({
+                    stopTimeInterval:val
+                })
+            },
+            // 查询停车列表
+            queryStopList(){
                 dispatch({
-                    type:'history/setMapZoomCenter',
-                    payload:{
-                        zoom,center
-                    }
+                    type:'history/getCarStopInfo'
                 });
             }
         }
@@ -607,15 +744,20 @@ class GPSHistory extends React.Component{
         return (
             
             <div className={`${style.rm} ${bkCfg.isNarrow?style.narrowLeft:''}`}>
-                <SearchInput {...searchInputProps}/>
                 <TrackMap {...mapProps} ref={(inst)=>{if(inst)t.map=inst}}/>
-                
+                <SearchInput {...searchInputProps}/>
                 <LeftPanel {...leftPanelProps} ref={(ins)=>{if(ins)t.leftPanelInstance = ins}}/>
                 <BottomPanel {...bottomPanelProps} ref={(ins)=>{if(ins)t.bottomPanelInstance = ins;}}/>
                 <ToolBox {...toolBoxProps}/>
-              
                 <CarPlayControl {...carPlayProps}/>
-
+                {
+                    loading?<Loading/>:null
+                }
+                {
+                    selectMode?<Button className={style.exitModeBt} type='primary' onClick={()=>{
+                        t.search();
+                    }}>退出框选模式</Button>:null
+                }
                 <VtxModal key="selectArea"
                     title='框选区域车辆'
                     visible={selectedArea.show}
@@ -625,6 +767,7 @@ class GPSHistory extends React.Component{
                             type:'history/getCarTreeBySelectedArea'
                         }); 
                         t.updateModel({
+                            selectMode:true,
                             selectedArea:{
                                 show:false
                             }

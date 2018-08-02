@@ -1,7 +1,8 @@
 import moment from 'moment';
 import 'moment/locale/zh-cn';
 moment.locale('zh-cn');
-import Immutable from 'immutable';
+import _isEqual from 'lodash/isEqual';
+import _mergeWith from 'lodash/mergeWith';
 
 /*
     时间util类
@@ -320,7 +321,16 @@ export class DataMapProcessor {
 }
 
 export function deepEqual(a,b){
-    return Immutable.is(Immutable.fromJS(a),Immutable.fromJS(b));
+    return _isEqual(a,b);
+}
+
+// 合并对象
+export function merge(a,b) {
+    _mergeWith(a,b,(objValue, srcValue)=>{
+        if(Array.isArray(objValue)){
+            return objValue.concat(srcValue);
+        }
+    })
 }
 
 export function delay(time) {

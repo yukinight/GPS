@@ -5,18 +5,12 @@ import {getGPSConfigIFS,getCarTypeTreeIFS,getCarOrgTreeIFS,getTenantMapInfoIFS,
     sendSchedulingMsgIFS,getCarVideoInfoIFS
 } from '../services/GPSRealTimeIFS';
 import {GPS_ICON} from '../utils/iconMap';
-import {VtxTime,VtxUtil} from '../utils/util';
-import {carTreeDataProcessor} from '../utils/GPSUtil';
+import {VtxTime,VtxUtil,delay} from '../utils/util';
+import {carTreeDataProcessor,mapTypeCfg} from '../utils/GPSUtil';
 import u from 'updeep';
 import {message} from 'antd';
 
 const urlmap = VtxUtil.getUrlParam('mapType');
-
-// 用于切换地图
-const mapTypeCfg = {
-    'baidu':{frontEnd:'bd09',backEnd:'bMap',mapCoord:'bd09'},
-    'arcgis':{frontEnd:'gmap',backEnd:'',mapCoord:'wgs84'},
-}
 const MAPTYPE = mapTypeCfg[urlmap=='ac'?'arcgis':'baidu'];
 
 // 工具栏默认配置
@@ -104,7 +98,7 @@ export default {
         // 地图配置项
         mapCfg:{
             mapId:'real_time_map',
-            mapServer:{type:'gis',url:['http://www.hangzhoumap.gov.cn/Tile/ArcGISFlex/HZTDTVECTORBLEND.gis']},
+            // mapServer:{type:'gis',url:['http://www.hangzhoumap.gov.cn/Tile/ArcGISFlex/HZTDTVECTORBLEND.gis']},
             mapZoomLevel:12,
             setZoomLevel:false,
             mapType:MAPTYPE.frontEnd,
@@ -1243,10 +1237,4 @@ function getFormatTime(timestamp){
     const h = d.getHours();
     const m = d.getMinutes();
     return `${h>=10?h:`0${h}`}:${m>=10?m:`0${m}`}`;
-}
-
-function delay(time) {
-    return new Promise((resolve)=>{
-        setTimeout(()=>{resolve()},time);
-    })
 }

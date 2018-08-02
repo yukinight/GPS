@@ -1,6 +1,6 @@
 import React from 'react';
 import {connect} from 'dva';
-import {VtxMap,VtxModal,VtxTree} from 'vtx-ui';
+import {VtxMap,VtxModal,VtxZtree} from 'vtx-ui';
 import {Input,Select,message,Button} from 'antd';
 import SearchInput from './searchInput';
 import LeftPanel from './leftPanel';
@@ -375,13 +375,22 @@ class RealTime extends React.Component {
             '停车在线': GPS_ICON.map.carStop,
             '离线': GPS_ICON.map.carOff,
         }
-        return (carIds||leftPanelCfg.selectedNodes).filter((id)=>id in carsInfo).map((id)=>carsInfo[id]).map((item)=>{            
+        const labelClass = (()=>{
+            if(hideCarCode){
+                return style.noLabel;
+            }
+            return bkCfg.isShowCarClasses?style.widePointLabel:style.pointLabel;
+        })();
+        // 地图点位排序按上报时间
+        return (carIds||leftPanelCfg.selectedNodes).filter((id)=>id in carsInfo).map((id)=>carsInfo[id]).sort((a,b)=>{
+            return a.equipmentTime < b.equipmentTime?1:-1;
+        }).map((item)=>{           
             return {
                 id:item.carId,
                 latitude:item.latitudeDone,
                 longitude:item.longitudeDone,
-                canShowLabel:!hideCarCode,
-                labelClass:bkCfg.isShowCarClasses?style.widePointLabel:style.pointLabel,
+                canShowLabel:true,
+                labelClass,
                 url: carStatusIcon[item.carStatus]||'',
                 pointType:'car',
                 config:{
@@ -564,7 +573,7 @@ class RealTime extends React.Component {
         const trackedLines = trackCfg.trackPointsId.filter((id)=>id in trackCfg.trackLines).map((id)=>trackCfg.trackLines[id]);
         const clickedPoint = currentClickPoint.id && leftPanelCfg.selectedNodes.indexOf(currentClickPoint.id)!=-1?t.generateMapCarPoints([currentClickPoint.id]):[];
         const focusAreaMapElems = t.focusAreaDataProcessor();
-        
+
         let mapProps ={
             ...mapCfg,
             mapLines:[],
@@ -814,7 +823,7 @@ class RealTime extends React.Component {
         // 多车跟踪树
         const TreeProps = {
             data: leftPanelCfg.treeData,
-            isExpandAll:'openAll',
+            defaultExpandAll:true,
             checkable:true,
             checkedKeys:batchTrackWindow.checkedKeys,
             onCheck({key,isChecked,checkedKeys, treeNode, leafNode }){
@@ -969,7 +978,7 @@ class RealTime extends React.Component {
                     }}
                 >
                     <div>
-                        <VtxTree {...TreeProps}/>
+                        <VtxZtree {...TreeProps}/>
                     </div>
                 </VtxModal>
 
@@ -987,7 +996,6 @@ class RealTime extends React.Component {
                     }}
                     footer={[
                         <Button key="send" type="primary" loading={sendMsgWindow.loading} onClick={()=>{
-                            console.log(sendMsgWindow)
                             dispatch({
                                 type:'realTime/sendSchedulingMsg'
                             })

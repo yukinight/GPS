@@ -16,7 +16,12 @@ export const GPS_ICON = {
         gasStation:'./resources/images/gasStation.png',
         repairShop:'./resources/images/repairShop.png',
         abnormal:'./resources/images/abnormalCar.png',
-        refueling:'./resources/images/refueling.png'
-    }
+        refueling:'./resources/images/refueling.png',
+        selectedPosition:'./resources/images/selectedPosition.png',
+        selectedStopCar:'./resources/images/selectedCarStop.png',
+        startPoint:'./resources/images/track_start.png',
+        endPoint:'./resources/images/track_end.png'
+    },
+    loading:'./resources/images/loading.gif'
     
 }

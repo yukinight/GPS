@@ -1,8 +1,8 @@
 import React from 'react';
 import style from './leftPanel.less';
 import st2 from './index.less';
-import {Icon, Button, Dropdown, Menu,Select,Tag,Tabs} from 'antd';
-import {VtxTree,VtxModalList,VtxDate} from 'vtx-ui';
+import {Icon, Button, Dropdown, Menu,Select,Tag,Tabs,message} from 'antd';
+import {VtxZtree,VtxModalList,VtxDate} from 'vtx-ui';
 import ReactEcharts from 'echarts-for-react';
 import {deepEqual} from '../../utils/util';
 import {getNewCarNameTree} from '../../utils/GPSUtil';
@@ -18,8 +18,8 @@ class LeftPanel extends React.Component{
         this.state = {
             collapse:false,//控制面板打开关闭
             detailPnState:0,//0收起，1一半，2撑满
-            currentDetailPn:'carPosition',//当前切换的详情面板id,共有4个:carPosition,gasStation,carRefueling,carAbnormal,
-            detailPnList:['carPosition'],
+            currentDetailPn:'',//当前切换的详情面板id,共有4个:carPosition,gasStation,carRefueling,carAbnormal,
+            detailPnList:[],
         }  
     }
     detailPnToggle(way){
@@ -128,12 +128,11 @@ class LeftPanel extends React.Component{
             data:{
                 data: t.getShowTreeData(),
                 isExpandAll:'other',
-                // autoExpandParent:false,
+                autoExpandParent:false,
                 expandedKeys:treeExpandedKeys,
             },
             func:{
-                
-                onExpand({key, isExpand, treeNode, expandedKeys }){                
+                onExpand({key, isExpand, treeNode, expandedKeys }){        
                     update({
                         leftPanelCfg:{
                             treeExpandedKeys:expandedKeys
@@ -141,7 +140,6 @@ class LeftPanel extends React.Component{
                     })
                 },
                 onClick({key,treeNode, selectedKeys }){
-                    console.log(treeNode)
                     if(treeNode.isLeaf){
                         selectCar({
                             carId: treeNode.key,
@@ -159,10 +157,6 @@ class LeftPanel extends React.Component{
                 carPositions,
                 selectedCarPositionIndex        
             },
-        }
-
-        const gasStationProps = {
-
         }
         
         const TT = <div>
@@ -236,6 +230,10 @@ class LeftPanel extends React.Component{
                                             {trackQueryForm.periodOptions.map(item=><Option key={item.id}>{item.name}</Option>)}
                                         </Select>
                                         <VtxDatePicker value={trackQueryForm.startTime} onChange={(val)=>{
+                                            if(trackQueryForm.endTime && !val.isBefore(trackQueryForm.endTime)){
+                                                message.warn('开始时间不能大于结束时间')
+                                                return;
+                                            }
                                             update({
                                                 trackQueryForm:{
                                                     startTime:val
@@ -246,6 +244,10 @@ class LeftPanel extends React.Component{
                                             width:90
                                         }}}/>
                                         <VtxDatePicker value={trackQueryForm.endTime} onChange={(val)=>{
+                                            if(trackQueryForm.endTime && !val.isAfter(trackQueryForm.startTime)){
+                                                message.warn('结束时间不能小于开始时间')
+                                                return;
+                                            }
                                             update({
                                                 trackQueryForm:{
                                                     endTime:val
@@ -305,11 +307,11 @@ class LeftPanel extends React.Component{
                                                 default:
                                                     return null;
                                             }
-                                            return (
-                                                <TabPane tab="车辆信息" key="carPosition" closable={false}>
-                                                    <CarDetailPn {...DetailPnProps}/>
-                                                </TabPane>
-                                            )
+                                            // return (
+                                            //     <TabPane tab="车辆信息" key="carPosition" closable={false}>
+                                            //         <CarDetailPn {...DetailPnProps}/>
+                                            //     </TabPane>
+                                            // )
                                         })
                                     }
                                 </Tabs>
@@ -378,7 +380,7 @@ class ImmutableTree extends React.Component{
         const TreeProps = {
             ...this.props.data,...this.props.func
         }
-        return (<VtxTree {...TreeProps}/>)
+        return (<VtxZtree {...TreeProps}/>)
     }
 }
 
@@ -527,7 +529,6 @@ function GasStationPn(props){
 }
 
 function RefuelingPn(props){
-    console.log(props)
     let detailList = [
         {title:'车牌号',value:props.carCode||''},
         {title:'加油时间',value:props.addOilDateTime||''},

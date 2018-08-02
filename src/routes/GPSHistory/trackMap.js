@@ -73,9 +73,10 @@ class TrackMap extends React.Component{
                     currentSupplementIndex:0
                 },()=>{
                     tableScrollToIndex(nextIndex);
+                    // 车速为0，停车2s
                     this.playTimer = setTimeout(()=>{
                         this.play();
-                    },1000/this.state.frames);
+                    },carPositions[nextIndex].speed==0?2000:1000/this.state.frames);
                 });
                 updateM({
                     carPlayCfg:{
@@ -90,9 +91,6 @@ class TrackMap extends React.Component{
         else if(nextIndex < carPositions.length){
             const currentPoint = carPositions[this.state.currentPlayIndex];
             const nextPoint = carPositions[nextIndex];
-            if(nextPoint.carStatus!='点火'){
-                console.log(nextPoint)
-            }
             // 从上一个点到下一个点移动所需要的时间
             const runTime = this.map.calculateDistance([[currentPoint.longitudeDone,currentPoint.latitudeDone],[nextPoint.longitudeDone,nextPoint.latitudeDone]])/(this.state.speed*carPlayCfg.speedRatio);
             // 路径很短，直接跳跃至该点
@@ -100,9 +98,10 @@ class TrackMap extends React.Component{
                 this.setState({
                     currentPlayIndex:nextIndex
                 },()=>{
+                    // 车速为0，停车2s
                     this.playTimer = setTimeout(()=>{
                         this.play();
-                    },runTime*1000);
+                    },nextPoint.speed==0?2000:runTime*1000);
                     tableScrollToIndex(nextIndex);
                     updateM({
                         carPlayCfg:{
@@ -211,6 +210,9 @@ class TrackMap extends React.Component{
                 {x:carPositions[t.state.currentPlayIndex].longitudeDone,y:carPositions[t.state.currentPlayIndex].latitudeDone},
                 {x:carPositions[t.state.currentPlayIndex+1].longitudeDone,y:carPositions[t.state.currentPlayIndex+1].latitudeDone}
             );
+            const carLabel = currentTrackedCar.speed==0?(
+                currentTrackedCar.carStatus=='点火'?'停车在线':'熄火'
+            ):currentTrackedCar.carCode;
             // 显示补点
             if(this.state.supplementPoints.length>0){
                 trackPoint = {
@@ -219,12 +221,13 @@ class TrackMap extends React.Component{
                     longitude:this.state.supplementPoints[this.state.currentSupplementIndex][0],
                     canShowLabel:true,
                     url:GPS_ICON.map.carOn,
+                    labelClass:'trackCarLabel',
                     config:{
                         width:30,
                         height:30,
                         markerContentX:-15,
                         markerContentY:-15,
-                        labelContent:currentTrackedCar.carCode,
+                        labelContent:carLabel,
                         deg,
                     }
                 }
@@ -237,12 +240,13 @@ class TrackMap extends React.Component{
                     longitude:currentTrackedCar.longitudeDone,
                     canShowLabel:true,
                     url:GPS_ICON.map.carOn,
+                    labelClass:currentTrackedCar.speed==0?'stopCarLabel':'trackCarLabel',
                     config:{
                         width:30,
-                        height:30,
+                        height:30,            
                         markerContentX:-15,
-                        markerContentY:-15,
-                        labelContent:currentTrackedCar.carCode,
+                        markerContentY:-15,            
+                        labelContent:carLabel,
                         deg,
                     }
                 }
@@ -260,10 +264,15 @@ class TrackMap extends React.Component{
             }
             // 轨迹播放时，地图中心点跟随变动
             if(carPlayCfg.isPlaying){
-                mapProps.mapCenter = [carPositions[t.state.currentPlayIndex].longitudeDone,carPositions[t.state.currentPlayIndex].latitudeDone];
+                if(this.state.supplementPoints.length>0){
+                    mapProps.mapCenter = this.state.supplementPoints[this.state.currentSupplementIndex];
+                }
+                else{
+                    mapProps.mapCenter = [carPositions[t.state.currentPlayIndex].longitudeDone,carPositions[t.state.currentPlayIndex].latitudeDone];
+                }
+                
                 mapProps.setCenter = true;
             }
-            // console.log(trackPoint)
             mapProps.mapPoints = mapProps.mapPoints?[...mapProps.mapPoints,trackPoint]:[trackPoint]
             // 播放到第二个点时，开始画播放轨迹
             if(t.state.currentPlayIndex){

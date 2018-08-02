@@ -7,7 +7,7 @@ export default class CarPlayControl extends React.Component{
     constructor(props){
         super();
         this.state = {
-            folded:true,//是否折叠面板
+            folded:false,//是否折叠面板
         }
     }
     render(){
@@ -31,9 +31,10 @@ export default class CarPlayControl extends React.Component{
                         <div className={style.barct} key={'playPanel'}>
                             <div className={style.singleBar}>
                                 <div className={style.barLabel}>播放速度:</div>
-                                <Slider value={speedRatio} min={1} max={50} marks={{
+                                <Slider value={speedRatio} min={1} max={20} marks={{
                                     1:'1x',
-                                    50:'50x'
+                                    20:'20x',
+                                    [speedRatio]:`${speedRatio}x`
                                 }} onChange={(val)=>{
                                     updateM({
                                         carPlayCfg:{
@@ -46,7 +47,8 @@ export default class CarPlayControl extends React.Component{
                                 <div className={style.barLabel}>播放进度:</div>
                                 <Slider  value={progress} marks={{
                                     0:'0%',
-                                    100:'100%'
+                                    100:'100%',
+                                    [progress]:`${progress}%`
                                 }} onChange={(val)=>{
                                     updateM({
                                         carPlayCfg:{

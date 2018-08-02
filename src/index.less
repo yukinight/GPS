@@ -7,10 +7,37 @@ html, body, :global(#root) {
         padding: 0;
         margin: 0;
     }
+    // 百度地图标签样式
     .BMapLabel{
 		&:hover{
 			z-index: 100 !important;
 		}
+    }
+    // arcgis图层
+    #real_time_map_zoom_slider{
+        z-index: 1 !important;
+    }
+    #real_time_map_zoom_slider_show{
+        z-index: 1 !important;
+    }
+    .treeIcon_ico_docu{
+        background-size: cover !important;
+    }
+    .loading{
+        position: absolute;
+        left:50%;
+        top:50%;
+        transform: translate(-50%,-50%);
+        z-index: 10;
+    }
+    .cover_layer{
+        position: absolute;
+        top:0;
+        left: 0;
+        height: 100%;
+        width:100%;
+        z-index: 10;
+        background-color: rgba(230,230,230,0.5)
     }
 }
 
