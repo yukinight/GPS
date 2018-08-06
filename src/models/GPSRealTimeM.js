@@ -347,7 +347,7 @@ export default {
                             treeData:treeProcessor.getNewTree(),
                             selectedNodes:state.bkCfg.isCarTreeCheck?treeProcessor.getNodes().map(item=>item.id):[],
                             treeExpand:'openAll',
-                            treeExpandedKeys:treeProcessor.getParentNodeIds(),
+                            treeExpandedKeys:treeProcessor.getGrandParentNodeIds(),
                             carNodeIds:treeProcessor.getCarNodeIds()
                         }
                     }});

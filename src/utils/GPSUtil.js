@@ -49,6 +49,7 @@ export class carTreeDataProcessor{
         this.treeNodes = [];
         this.carNodeIds = [];
         this.parentNodeIds = [];
+        this.grandParentNodeIds = [];
         this.newTree = this.generateNewTree(rawData);
     }
     generateNewTree(rawData){
@@ -59,6 +60,9 @@ export class carTreeDataProcessor{
             this.treeNodes.push(node);
             if(Array.isArray(item.children) && item.children.length>0){
                 this.parentNodeIds.push(item.id);
+                if(item.children.every((item)=>item.nodeType!='car')){
+                    this.grandParentNodeIds.push(item.id);
+                }
                 return {
                     name: item.name,
                     key: item.id,
@@ -94,6 +98,9 @@ export class carTreeDataProcessor{
     }
     getParentNodeIds(){
         return this.parentNodeIds;
+    }
+    getGrandParentNodeIds(){
+        return this.grandParentNodeIds;
     }
 }
 

@@ -38,7 +38,8 @@ class ScrollTable extends React.Component{
     }
     // 表格滚动到某个index位置
     scrollToIndex(index){
-        this.virtualizedTable.scrollToPosition(index*this.state.rowHeight);
+        // this.virtualizedTable.scrollToPosition(index*this.state.rowHeight);
+        this.virtualizedTable.scrollToRow(index);
     }
     // 计算列的平均宽度
     getAvgWidth(total,num,widthList){
@@ -115,6 +116,7 @@ class ScrollTable extends React.Component{
                             }}
                             scrollToIndex={scrollToIndex}
                             onScroll={t.onScroll.bind(t)}
+                            overscanRowCount={10}
                         >
                             <Column
                                 label=" "

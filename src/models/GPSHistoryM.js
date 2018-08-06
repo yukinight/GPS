@@ -375,7 +375,7 @@ export default {
                         leftPanelCfg:{
                             treeData:treeProcessor.getNewTree(),
                             treeExpand:'openAll',
-                            treeExpandedKeys:treeProcessor.getParentNodeIds(),
+                            treeExpandedKeys:treeProcessor.getGrandParentNodeIds(),
                             carNodeIds:treeProcessor.getCarNodeIds()
                         }
                     }});
