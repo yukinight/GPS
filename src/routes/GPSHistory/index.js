@@ -29,7 +29,22 @@ class GPSHistory extends React.Component{
         // 获取通用配置
         dispatch({
             type:'history/getGPSConfig'
-        });
+        }).then(()=>{
+            // 实时页面跳转过来查询车辆轨迹
+            if(VtxUtil.getUrlParam('carId')){
+                this.updateModel({
+                    trackQueryForm:{
+                        selectedCarInfo:{
+                            carId:VtxUtil.getUrlParam('carId'),
+                            carCode:decodeURIComponent(VtxUtil.getUrlParam('carCode'))
+                        }
+                    }
+                })
+                dispatch({
+                    type:'history/searchByCarTimeSlot'
+                })
+            }
+        })
         // 设置地图中心点
         dispatch({
             type:'history/getCenterLocation'
@@ -41,20 +56,7 @@ class GPSHistory extends React.Component{
         });
         // 获取关注区列表
         dispatch({type:'history/getFocusAreaList'});
-        // 实时页面跳转过来查询车辆轨迹
-        if(VtxUtil.getUrlParam('carId')){
-            this.updateModel({
-                trackQueryForm:{
-                    selectedCarInfo:{
-                        carId:VtxUtil.getUrlParam('carId'),
-                        carCode:decodeURIComponent(VtxUtil.getUrlParam('carCode'))
-                    }
-                }
-            })
-            dispatch({
-                type:'history/searchByCarTimeSlot'
-            })
-        }
+        
     }
     // 车辆历史数据,树查询
     search(){

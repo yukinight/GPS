@@ -68,7 +68,7 @@ export class carTreeDataProcessor{
                     key: item.id,
                     isLeaf: item.nodeType=='car',
                     icon: getTreeIcon(item),
-                    iconSkin:'treeIcon',
+                    // iconSkin:'treeIcon',
                     children: this.generateNewTree(item.children)
                 }
             }
@@ -82,7 +82,7 @@ export class carTreeDataProcessor{
                     attributes: item.attributes,
                     isLeaf: item.nodeType=='car',
                     icon: getTreeIcon(item),
-                    iconSkin:'treeIcon',
+                    // iconSkin:'treeIcon',
                 }
             }
         })

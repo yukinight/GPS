@@ -288,7 +288,7 @@ export default {
                 }})
             }
             const {data} = yield call(getTenantMapInfoIFS,{
-                mapType:MAPTYPE.backEnd
+                coordType:MAPTYPE.backEnd
             });
             if(data && data.data && data.data.longitudeDone && data.data.latitudeDone){
                 const mapCenter = [data.data.longitudeDone,data.data.latitudeDone];
@@ -669,7 +669,7 @@ export default {
             })
             const {data} = yield call(getCarOilLineIFS,{
                 carId,
-                mapType:MAPTYPE.backEnd,
+                coordType:MAPTYPE.backEnd,
                 startTime:`${today} 00:00:00`,
                 endTime:`${today} 23:59:59`
             })
@@ -736,7 +736,7 @@ export default {
             const {data} = yield call(trackMultiCarRealTimeDataIFS,{
                 needOil:'1',
                 carIds:trackCarIdsList.join(','),
-                mapType:MAPTYPE.backEnd,
+                coordType:MAPTYPE.backEnd,
                 startTimes: trackCarIdsList.map(carId=>carId in trackLines && carId in carsInfo ?carsInfo[carId].equipmentTime:'').join(',')
             })
            
@@ -844,7 +844,7 @@ export default {
         *getFocusAreaDetail({ payload }, { call, put, select }){
             const {areaId} = payload;
             const {data} = yield call(getFocusAreaDetailIFS,{
-                mapType:MAPTYPE.backEnd,
+                coordType:MAPTYPE.backEnd,
                 typeId:areaId
             });
            
@@ -862,7 +862,7 @@ export default {
         // 获取加油站数据
         *getGasStation({ payload }, { call, put, select }){
             const {data} = yield call(getGasStationListIFS,{
-                mapType:MAPTYPE.backEnd
+                coordType:MAPTYPE.backEnd
             })
             if(data && data.data){
                 const mapStationPoints = data.data.map((item)=>{
@@ -900,7 +900,7 @@ export default {
         // 获取维修厂数据
         *getRepairShop({ payload }, { call, put, select }){
             const {data} = yield call(getRepairShopListIFS,{
-                mapType:MAPTYPE.backEnd
+                coordType:MAPTYPE.backEnd
             })
             if(data && data.data){
                 const mapRepairShopPoints = data.data.map((item)=>{

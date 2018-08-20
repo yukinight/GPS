@@ -514,7 +514,7 @@ class RealTime extends React.Component {
     genRealDataColumns(){
         const {bkCfg} = this.props;
         return [
-            {label: "自编号", dataKey:'groupCode'},
+            // {label: "自编号", dataKey:'groupCode'},
             {label: "车牌号", dataKey:'carCode'},
             {label: "GPS状态", dataKey:'carStatus'},
             {label: "速度(km/h)", dataKey:'speed'},

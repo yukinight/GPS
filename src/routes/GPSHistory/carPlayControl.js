@@ -23,7 +23,12 @@ export default class CarPlayControl extends React.Component{
                     })
                 }}>
                     <span>分段轨迹</span>
-                (两段轨迹间，车辆停车时间超过5分钟)
+                    (两段轨迹间，车辆停车时间超过5分钟)
+                    <div className={style.toggleIcon}>
+                        {
+                            this.state.folded?<Icon type="down" />:<Icon type="up" />
+                        }
+                    </div>
                 </div>
                 {
                     this.state.folded?null
