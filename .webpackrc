@@ -2,7 +2,7 @@
   "entry": "src/index.js",
   "proxy": {
     "/api": {
-      "target": "http://120.26.217.62:19190/",
+      "target": "http://120.26.218.105:12020/",
       "changeOrigin": true,
       "pathRewrite": { "^/api" : "" }
     },
@@ -12,7 +12,7 @@
       "pathRewrite": { "^/lbs" : "" }
     },
     "/alarm": {
-      "target": "http://120.27.248.90:18095/",
+      "target": "http://120.26.218.105:12020/",
       "changeOrigin": true,
       "pathRewrite": { "^/alarm" : "" }
     },

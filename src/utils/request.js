@@ -26,7 +26,7 @@ export default function request(url, options={}) {
     }
     let ajaxPropmise = new Promise((resolve, reject) => {
         $.ajax({
-            type: options.method || 'get',
+            type: options.method || 'post',
             url: `${url}`,
             data: postData,
             dataType: 'json',
