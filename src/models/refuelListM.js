@@ -2,7 +2,7 @@
 
 import moment from 'moment';
 import {message} from 'antd';
-import { getBaicPostData} from '../utils/util';
+import { getBaicPostData,VtxUtil} from '../utils/util';
 import { getCarTypeSelect, getCarCodeTree, getRefuelList, getDepartTree, getRefuelPoints,getOilLine} from '../services/oilManage';
 export default{
     namespace:'refuelList',
@@ -267,6 +267,15 @@ export default{
             // dispatch({type:'fetchRemote'})
             history.listen(({ pathname }) => {
                 if (pathname === '/refuelList') {
+                    const type = VtxUtil.getUrlParam('type');
+                    if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap') {
+                        dispatch({
+                            type: 'updateState',
+                            payload: {
+                                mapType: type
+                            }
+                        })
+                    }
                     dispatch({ type: 'getCarTypeSelect' });
                     dispatch({ type: 'getCompanyTree' });
                     dispatch({ type: 'getCarCodeTree' });

@@ -6,6 +6,7 @@ import ReactEcharts from 'echarts-for-react';
 import { VtxMap } from 'vtx-ui';
 import styles from './ExceptionDetailModal.less'
 import { REFUEL_ICON } from '../../utils/refuelIcon';
+import { GPS_ICON} from '../../utils/iconMap';
 const FormItem = Form.Item;
 const { VtxOptMap } = VtxMap;
 
@@ -173,7 +174,7 @@ class ExceptionDetailModal extends React.Component {
                 id: item.id,
                 longitude: item.longitude,
                 latitude: item.latitude,
-                url: REFUEL_ICON.map.addoil
+                url: GPS_ICON.map.abnormal
             })
         }) : '';
         //行驶路线数据

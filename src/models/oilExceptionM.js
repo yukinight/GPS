@@ -2,7 +2,7 @@
 
 import moment from 'moment';
 import { message } from 'antd';
-import { getBaicPostData } from '../utils/util';
+import { getBaicPostData, VtxUtil } from '../utils/util';
 import { getCarCodeTree, getDepartTree, getExceptionPoints, getOilLine, getOilExceptionList, handleException} from '../services/oilManage';
 
 export default{
@@ -291,6 +291,15 @@ export default{
             // dispatch({type:'fetchRemote'})
             history.listen(({ pathname }) => {
                 if (pathname === '/oilException') {
+                    const type=VtxUtil.getUrlParam('type');
+                    if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap'){
+                        dispatch({
+                            type:'updateState',
+                            payload:{
+                                mapType:type
+                            }
+                        })
+                    }
                     dispatch({ type: 'getCompanyTree' });
                     dispatch({ type: 'getCarCodeTree' });
                     dispatch({ type: 'getTableData' });

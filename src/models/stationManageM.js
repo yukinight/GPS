@@ -1,6 +1,6 @@
 //油耗管理 加油站管理
 import { message } from 'antd';
-import { getBaicPostData } from '../utils/util';
+import { getBaicPostData,VtxUtil } from '../utils/util';
 import { getGasStationList, checkForm, addStation, updateStation, deleteStation } from '../services/oilManage';
 export default {
     namespace: 'stationManage',
@@ -200,7 +200,15 @@ export default {
         // dispatch({type:'fetchRemote'})
         history.listen(({ pathname }) => {
             if (pathname === '/stationManage') {
-
+                const type = VtxUtil.getUrlParam('type');
+                if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap') {
+                    dispatch({
+                        type: 'updateState',
+                        payload: {
+                            mapType: type
+                        }
+                    })
+                }
                 dispatch({ type: 'getTableData' });
             }
         });
