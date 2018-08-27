@@ -168,7 +168,7 @@ class MapPlay{
                 paths,
                 config:{
                     lineWidth:3,
-                    color:'red'
+                    color:'blue'
                 }
             }
             if(this.map.GM.isRepetition(this.lineId)){

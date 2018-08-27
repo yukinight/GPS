@@ -1,7 +1,7 @@
 import React from 'react';
 import {connect} from 'dva';
 import {VtxModal,VtxModalList,VtxDate} from 'vtx-ui';
-import { Button } from 'antd';
+import { Button, Switch,Input  } from 'antd';
 import SearchInput from '../GPSRealTime/searchInput';
 import ToolBox from '../GPSRealTime/toolBox';
 import LeftPanel from './leftPanel';
@@ -104,7 +104,7 @@ class GPSHistory extends React.Component{
     toolBoxSelect(menuIndex,optIndex){
         const t = this;
         const menuId = t.props.toolboxCfg[menuIndex].id,
-        optionId = t.props.toolboxCfg[menuIndex].children[optIndex].id
+        optionId = t.props.toolboxCfg[menuIndex].children[optIndex].id;
         switch(optionId){
             case 'showHistoryPath':
                 t.updateModel({
@@ -172,6 +172,13 @@ class GPSHistory extends React.Component{
                         type:'history/getRepairShop'
                     });
                 }
+                break;
+            case 'alarmSpeed':
+                t.updateModel({
+                    pathAlarmSetting:{
+                        show:true
+                    }
+                });
                 break;
         }
         // 关注区点击处理
@@ -291,6 +298,110 @@ class GPSHistory extends React.Component{
                 break;
         }
     }
+    // 生成历史轨迹路段
+    genHistoryLines(){
+        const {carPositions,pathAlarmSetting} = this.props;
+        function guiJiFenDuan(trace, speedLimit){
+            let splitedTraces = [];//分割轨迹段，单位：轨迹数组
+            let currentTrace = [];//当前轨迹段，单位：点位
+            const lineColorMap = {
+                normal:'#1DA362',
+                over:'red'
+            }
+            // 1.分段
+            for(let i=0,len=trace.length;i<len;i++){
+                if(trace[i].speed>=speedLimit){
+                    switch(currentTrace.lineType){
+                        case 'over':
+                            currentTrace.push(trace[i]);
+                            break;
+                        default:
+                            if(currentTrace.length>0)splitedTraces.push(currentTrace);
+                            currentTrace = [trace[i]];
+                            currentTrace.lineType = 'over';
+                    }
+                }
+                else{
+                    switch(currentTrace.lineType){
+                        case 'normal':
+                            currentTrace.push(trace[i]);
+                            break;
+                        default:
+                            if(currentTrace.length>0)splitedTraces.push(currentTrace);
+                            currentTrace = [trace[i]];
+                            currentTrace.lineType = 'normal';
+                    }
+                }
+                // 最后一个点
+                if(i==len-1){
+                    splitedTraces.push(currentTrace);
+                }
+            }
+            // 2.生成新的轨迹线
+            let newTraces = [];
+            for(let i=0,len=splitedTraces.length;i<len;i++){
+                const currentPoint = splitedTraces[i][0];
+                // 第一段用后面的点补线
+                if(i==0){
+                    if(splitedTraces.length>1){
+                        const nextTrace = splitedTraces[i+1];
+                        const nextPoint = nextTrace[0];
+                        const addedPoint = nextPoint;
+                        splitedTraces[i].push(addedPoint);
+                    }
+                }
+                // 第二段且第一段只有一个点，用中间点补线
+                else if(i==1 && splitedTraces[0].length==0){
+                    const lastTrace = splitedTraces[0];
+                    const lastPoint = lastTrace[lastTrace.length-1];
+                    const addedPoint = {
+                        ...lastPoint,
+                        longitudeDone:(lastPoint.longitudeDone+currentPoint.longitudeDone)/2,
+                        latitudeDone:(lastPoint.latitudeDone+currentPoint.latitudeDone)/2,
+                    };
+                    splitedTraces[i].unshift(addedPoint);
+                }
+                // 非第一段用前面的点补线
+                else{
+                    const lastTrace = splitedTraces[i-1];
+                    const lastPoint = lastTrace[lastTrace.length-1];
+                    const addedPoint = lastPoint;
+                    splitedTraces[i].unshift(addedPoint);
+                }
+
+                newTraces.push({
+                    id:`line-${i}`,
+                    paths:splitedTraces[i].map(item=>[item.longitudeDone,item.latitudeDone]),
+                    config:{
+                        lineWidth:3,
+                        color:lineColorMap[splitedTraces[i].lineType]
+                    }
+                });
+            }
+            return newTraces;
+        }
+        // 点位小于两个，不画线
+        if(carPositions.length<2){
+            return [];
+        }
+        else{
+            // 历史轨迹开启报警分段
+            if(pathAlarmSetting.on){
+                return guiJiFenDuan(carPositions,pathAlarmSetting.speedLimit);
+            }
+            // 历史轨迹未开启报警分段
+            else{
+                return [{
+                    id:`line-${carPositions[0].id}`,
+                    paths:carPositions.map(item=>[item.longitudeDone,item.latitudeDone]),
+                    config:{
+                        lineWidth:3,
+                        color:'#1DA362'
+                    }
+                }]
+            }
+        }
+    }
     // 生成地图停车点位数据
     genMapPointsForStopCar(){
         return this.props.carStopInfo.map((item,index)=>{
@@ -393,14 +504,15 @@ class GPSHistory extends React.Component{
         }
     }
     // 生成历史轨迹首尾两点
-    genHeadTailPoints(paths){
-        if(Array.isArray(paths) && paths.length>=2){
-            const head = paths[0];
-            const tail = paths[paths.length-1];
+    genHeadTailPoints(){
+        const {carPositions} = this.props;
+        if(carPositions.length>=2){
+            const head = carPositions[0];
+            const tail = carPositions[carPositions.length-1];
             return [{
                 id:'startPoint',
-                latitude: head[1],
-                longitude: head[0],
+                latitude: head.latitudeDone,
+                longitude: head.longitudeDone,
                 url: GPS_ICON.map.startPoint,
                 pointType:'startPoint',
                 config:{
@@ -411,8 +523,8 @@ class GPSHistory extends React.Component{
                 }
             },{
                 id:'endPoint',
-                latitude: tail[1],
-                longitude: tail[0],
+                latitude: tail.latitudeDone,
+                longitude: tail.longitudeDone,
                 url: GPS_ICON.map.endPoint,
                 pointType:'endPoint',
                 config:{
@@ -437,10 +549,10 @@ class GPSHistory extends React.Component{
         const t = this;
         const {dispatch,carTreeSearchCfg,mapCfg,bkCfg,leftPanelCfg,trackQueryForm,
             toolboxCfg,carPositions,carPlayCfg,bottomPanelCfg,gasStation,repairShop,
-            carPositionsLine,showHistoryPath,showStopCar,carStopInfo,stopTimeInterval,
+            showHistoryPath,showStopCar,carStopInfo,stopTimeInterval,
             selectedCarPositionIndex,selectedArea,loading,selectedRefuelingId,
             selectedAbnormalId,selectedGasStationId,refuelingPoints,abnormalPoints,
-            selectMode} = this.props;
+            selectMode,pathAlarmSetting} = this.props;
 
         // 地图配置变动
         let newMapCfg = {
@@ -490,10 +602,10 @@ class GPSHistory extends React.Component{
             });
         }
         // 是否显示历史轨迹线以及首尾点
-        if(showHistoryPath && carPositionsLine.id){
+        if(showHistoryPath){
             merge(newMapCfg,{
-                mapLines:[carPositionsLine],
-                mapPoints:t.genHeadTailPoints(carPositionsLine.paths),
+                mapLines:t.genHistoryLines(),
+                mapPoints:t.genHeadTailPoints(),
             });
         }
         // 是否显示停车点位
@@ -806,6 +918,58 @@ class GPSHistory extends React.Component{
                             width:90
                         }}}/>
                     </VtxModalList>
+                </VtxModal>
+
+                <VtxModal key="alarmSpeed"
+                    title='设置轨迹报警速度'
+                    visible={pathAlarmSetting.show}
+                    width={500}
+                    onOk={()=>{
+                        t.updateModel({
+                            pathAlarmSetting:{
+                                show:false,
+                                on:pathAlarmSetting.onTemp,
+                                speedLimit:pathAlarmSetting.speedTemp
+                            }
+                        })
+                    }}
+                    onCancel={()=>{
+                        t.updateModel({
+                            pathAlarmSetting:{
+                                show:false,
+                                onTemp:pathAlarmSetting.on,
+                                speedTemp:pathAlarmSetting.speedLimit
+                            }
+                        })
+                    }}
+                >
+                    <div style={{padding:'5px 10px'}}>
+                        <span style={{marginRight:'10px'}}>轨迹速度报警:</span>
+                        <Switch checkedChildren="开" unCheckedChildren="关"
+                        checked={pathAlarmSetting.onTemp} onChange={(val)=>{
+                            t.updateModel({
+                                pathAlarmSetting:{
+                                    onTemp:val
+                                }
+                            })
+                        }}/>
+                    </div>
+                    <div style={{padding:'5px 10px'}}>
+                        <span style={{marginRight:'10px'}}>报警速度阈值:</span>
+                        
+                        <Input  style={{width:'50px'}}  value={pathAlarmSetting.speedTemp} onChange={(e)=>{
+                            const val = e.target.value;
+                            if(isNaN(Number(val)))return;
+                            t.updateModel({
+                                pathAlarmSetting:{
+                                    speedTemp: Number(val)
+                                }
+                            })
+                        }}/>km/h 
+                        <div>(小于此速度为绿色轨迹线，大于此速度为红色轨迹线)</div>
+                    </div>
+                    
+                    
                 </VtxModal>
                 
             </div>

@@ -30,6 +30,7 @@ let toolboxCfg = [
     {name:'设置', id:'setting', mode:'click', children:[
         {name:'隐藏历史轨迹',id:'showHistoryPath'},
         {name:'显示停车点位',id:'showStopCar'},
+        {name:'轨迹报警速度',id:'alarmSpeed'},
         // {name:'框选车辆',id:'selectArea'},
     ]},
     {name:'查看关注区',id:'focusArea', mode:'multiple', children:[]},
@@ -125,8 +126,6 @@ export default {
         carPositions:[],
         // 当前选中的车辆轨迹点位
         selectedCarPositionIndex:null,
-        // 车辆轨迹线
-        carPositionsLine:{},
         // 停车数据
         stopTimeInterval:10,//停车间隔（分钟）
         carStopInfo:[],
@@ -158,6 +157,14 @@ export default {
             locations:'',//框选区域左下角和右上角的经纬度
             startTime:'',//当前区域查询的开始时间
             endTime:'',//当前区域查询的结束时间
+        },
+        // 轨迹报警速度配置
+        pathAlarmSetting:{
+            show:false,//
+            onTemp:false,//是否开启临时值
+            on:false,//是否开启轨迹速度分段
+            speedTemp:30,//设置速度的临时值
+            speedLimit:30,//确定的速度限制
         },
         // 维修厂点位
         repairShop:{
@@ -229,11 +236,13 @@ export default {
                 // 框选功能
                 if(cfg.frameSelect){
                     const settingIndex = toolboxCfg.map(item=>item.id).indexOf('setting');
-                    toolboxCfg = u({
-                        [settingIndex]:{
-                            children:(orig)=>{return [...orig,{name:'框选车辆',id:'selectArea'}]}
-                        }
-                    },toolboxCfg);
+                    if(toolboxCfg[settingIndex].children.filter(item=>item.id=='selectArea').length==0){
+                        toolboxCfg = u({
+                            [settingIndex]:{
+                                children:(orig)=>{return [...orig,{name:'框选车辆',id:'selectArea'}]}
+                            }
+                        },toolboxCfg);
+                    }
                 }
 
                 // 增加工具栏配置
@@ -564,16 +573,8 @@ export default {
                             })),
                             selectedSplitTimeIndex:null
                         },
-                        carPositionsLine:data.data.positions.length>1?u.constant({
-                            id:`line-${carId}`,
-                            paths:data.data.positions.map(item=>[item.longitudeDone,item.latitudeDone]),
-                            config:{
-                                lineWidth:3,
-                                color:'#1DA362'
-                            }
-                        }):u.constant({}),
                         mapCfg:{
-                            mapVisiblePoints:{fitView:`line-${carId}`,type:'all'},
+                            mapVisiblePoints:{fitView:`line`,type:'all'},
                             setVisiblePoints:true
                         }
                     } 
@@ -623,16 +624,8 @@ export default {
                             progress:0,
                             resetProgressFlag:(val)=>{return val+1},
                         },
-                        carPositionsLine:data.data.positions.length>1?u.constant({
-                            id:`line-${carId}`,
-                            paths:data.data.positions.map(item=>[item.longitudeDone,item.latitudeDone]),
-                            config:{
-                                lineWidth:3,
-                                color:'#1DA362'
-                            }
-                        }):u.constant({}),
                         mapCfg:{
-                            mapVisiblePoints:{fitView:`line-${carId}`,type:'all'},
+                            mapVisiblePoints:{fitView:`line`,type:'all'},
                             setVisiblePoints:true
                         }
                     }
@@ -1068,5 +1061,3 @@ export default {
     },
 
 };
-
-

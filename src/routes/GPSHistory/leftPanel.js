@@ -532,8 +532,8 @@ function RefuelingPn(props){
     let detailList = [
         {title:'车牌号',value:props.carCode||''},
         {title:'加油时间',value:props.addOilDateTime||''},
-        {title:'加油前油量',value:props.beforeTime||''},
-        {title:'加油后油量',value:props.afterTime||''},
+        {title:'加油前油量',value:typeof props.beforeOilMass=='number'?`${props.beforeOilMass}L`:''},
+        {title:'加油后油量',value:typeof props.afterOilMass=='number'?`${props.afterOilMass}L`:''},
         {title:'加油量',value:typeof props.addOilMass=='number'?`${props.addOilMass}L`:''},
         {title:'加油地址',value:props.addOilAddress||''},
     ];
