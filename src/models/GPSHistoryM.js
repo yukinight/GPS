@@ -30,7 +30,7 @@ let toolboxCfg = [
     {name:'设置', id:'setting', mode:'click', children:[
         {name:'隐藏历史轨迹',id:'showHistoryPath'},
         {name:'显示停车点位',id:'showStopCar'},
-        {name:'轨迹报警速度',id:'alarmSpeed'},
+        {name:'轨迹速度报警',id:'alarmSpeed'},
         // {name:'框选车辆',id:'selectArea'},
     ]},
     {name:'查看关注区',id:'focusArea', mode:'multiple', children:[]},

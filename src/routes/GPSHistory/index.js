@@ -624,6 +624,13 @@ class GPSHistory extends React.Component{
         merge(newMapCfg,{
             mapPoints:t.genMapPointForSelectedStopCar()
         });
+        // 是否显示比例尺
+        if(bkCfg.isShowScale){
+            newMapCfg.showControl = {
+                location:'bl',
+                type:'all'
+            }
+        }
         
         // 1.地图组件参数
         let mapProps ={
@@ -921,7 +928,7 @@ class GPSHistory extends React.Component{
                 </VtxModal>
 
                 <VtxModal key="alarmSpeed"
-                    title='设置轨迹报警速度'
+                    title='设置轨迹速度报警'
                     visible={pathAlarmSetting.show}
                     width={500}
                     onOk={()=>{
