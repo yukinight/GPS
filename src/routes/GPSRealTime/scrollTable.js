@@ -120,8 +120,8 @@ class ScrollTable extends React.Component{
                         >
                             <Column
                                 label=" "
-                                cellDataGetter={({rowData}) => rowData.index}
                                 dataKey="index"
+                                cellRenderer={({rowIndex}) =>rowIndex+1 }
                                 width={50}
                                 headerStyle={{width:'50px'}}
                                 style={{width:'50px'}}
@@ -137,7 +137,6 @@ class ScrollTable extends React.Component{
                                     headerStyle={{width:`${t.state.avgWidth}px`}}
                                     style={{width:`${t.state.avgWidth}px`}}
                                     className={styles.cellForIE}
-                                     
                                 />)
                             }
                         </Table>
