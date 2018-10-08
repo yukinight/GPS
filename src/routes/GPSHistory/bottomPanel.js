@@ -143,6 +143,10 @@ class BottomPanel extends React.Component{
                 {
                     name:'速度(km/h)',
                     type:'line',
+                    showSymbol:false,
+                    lineStyle:{
+                        color: '#61A0A8'
+                    },
                     data:speedLineData.map( item=> item.value),
                     markLine: {
                         data: [
@@ -179,6 +183,10 @@ class BottomPanel extends React.Component{
                 {
                     name:oilLine.oilMeasureType=='XHL'?'消耗量(L)':'油量(L)',
                     type:'line',
+                    showSymbol:false,
+                    lineStyle:{
+                        color: '#61A0A8'
+                    },
                     data:oilLine.lineData.map(item=>item[1]),
                 }
             ]

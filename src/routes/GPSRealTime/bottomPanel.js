@@ -130,6 +130,10 @@ class BottomPanel extends React.Component{
                 {
                     name:'油量(L)',
                     type:'line',
+                    showSymbol:false,
+                    lineStyle:{
+                        color: '#61A0A8'
+                    },
                     data:carOilData.lineData.map( item=>item[1]),
                 }
             ]
