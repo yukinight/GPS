@@ -21,12 +21,13 @@ class LeftPanel extends React.Component{
                 carId:null
             }
         }  
+        this.clickHandler = this.clickHandler.bind(this);
     }
     componentDidMount(){
-        document.addEventListener('click',this.clickHandler.bind(this));
+        document.addEventListener('click',this.clickHandler);
     }
     componentWillUnmount(){
-        document.removeEventListener('click',this.clickHandler.bind(this));
+        document.removeEventListener('click',this.clickHandler);
     }
     // 全局点击事件管理：用于隐藏右键菜单，下拉菜单
     clickHandler(e){
@@ -88,6 +89,8 @@ class LeftPanel extends React.Component{
             trackOneCar,stopTrack,carIsTracking,openMsgWindow,getVideo,closeVideo} = t.props;
         let treePnStyle = {};
         let detailPnStyle = {};
+
+        const ifScheduleTmp = bkCfg.dispatchType == 'sms';//后台配置调度类型是否是调度屏
         // 面板高度切换
         switch(t.state.detailPnState){
             case 0:
@@ -170,6 +173,7 @@ class LeftPanel extends React.Component{
                 // 两个后台配置开关
                 ifShowOil:bkCfg.isOil,
                 ifShowRpm:bkCfg.showRpm,
+                ifScheduleTmp,
                 // 下面两个参数是用来判断组件是否要刷新
                 pageStatus,
                 trackPointsId:trackCfg.trackPointsId
@@ -199,13 +203,19 @@ class LeftPanel extends React.Component{
                 t.jumpToHistory(t.state.rightClickMenu.carId);
             }}>历史轨迹</li>
             {
-                videoCfg.showVideo && videoCfg.carId==t.state.rightClickMenu.carId?<li style={{fontWeight:'bold'}} onClick={closeVideo}>关闭视频</li>:<li onClick={()=>{
+                (carsInfo[t.state.rightClickMenu.carId]||{}).isWithVideo ?
+                (videoCfg.showVideo && videoCfg.carId==t.state.rightClickMenu.carId
+                 ?<li style={{fontWeight:'bold'}} onClick={closeVideo}>关闭视频</li>:<li onClick={()=>{
                     getVideo(t.state.rightClickMenu.carId);
-                }}>查看视频</li>
+                }}>查看视频</li>):null
             }
-            <li onClick={()=>{
-                openMsgWindow(t.state.rightClickMenu.carId);
-            }}>调度信息发送</li>
+            {
+                ifScheduleTmp && !(carsInfo[t.state.rightClickMenu.carId]||{}).isWithScheduleScreen ?
+                null:
+                <li onClick={()=>{
+                    openMsgWindow(t.state.rightClickMenu.carId);
+                }}>调度信息发送</li>
+            }
         </ul>;
 
         return (
@@ -356,7 +366,7 @@ class DetailPn extends React.Component{
        
         // 数据
         const {carInfo,pageStatus,pointType,gasStationInfo,ifShowOil,ifShowRpm,
-            videoCfg} = this.props.data;
+            ifScheduleTmp,videoCfg} = this.props.data;
         // 函数
         const {trackOneCar,stopTrack,carIsTracking,openMsgWindow,getVideo,closeVideo,
             jumpToHistory} = this.props;
@@ -542,16 +552,20 @@ class DetailPn extends React.Component{
                                     jumpToHistory(carInfo.carId)
                                 }}>历史轨迹</Button>
                                 {
-                                    videoCfg.showVideo && videoCfg.carId==carInfo.carId?<Button type="danger" onClick={()=>{
+                                    carInfo.isWithVideo ?
+                                    (videoCfg.showVideo &&  videoCfg.carId==carInfo.carId ? <Button type="danger" onClick={()=>{
                                         closeVideo();
                                     }}>关闭视频</Button>:<Button type="primary" onClick={()=>{
                                         getVideo(carInfo.carId);
-                                    }}>查看视频</Button>
+                                    }}>查看视频</Button>):null
+                                }
+                                {
+                                    ifScheduleTmp && !carInfo.isWithScheduleScreen ? null:
+                                    <Button type="primary" onClick={()=>{
+                                        openMsgWindow(carInfo.carId);
+                                    }}>调度信息发送</Button>
                                 }
                                 
-                                <Button type="primary" onClick={()=>{
-                                    openMsgWindow(carInfo.carId);
-                                }}>调度信息发送</Button>
                             </div>
                             :null
                         }

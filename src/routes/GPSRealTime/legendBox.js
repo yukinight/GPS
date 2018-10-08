@@ -24,10 +24,10 @@ export default function(props){
                     <img src={GPS_ICON.map.carOff}/>
                     <div>离线</div>
                 </li>
-                <li>
+                {/* <li>
                     <img src={GPS_ICON.map.carAlarm}/>
                     <div>报警</div>
-                </li>
+                </li> */}
             </ul>
         </div>
     )
