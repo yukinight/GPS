@@ -2,7 +2,7 @@ import {getGPSConfigIFS,getCarTypeTreeIFS,getCarOrgTreeIFS,getTenantMapInfoIFS,
     driverFuzzySearchIFS,carFuzzySearchIFS,getCarsIFS,getAddressByLngLatIFS,
     getAlarmInfoIFS,getCarOilLineIFS,trackMultiCarRealTimeDataIFS,getFocusAreaListIFS,
     getFocusAreaDetailIFS,getRepairShopListIFS,getGasStationListIFS,getCarStatisticsIFS,
-    sendSchedulingMsgIFS,getCarVideoInfoIFS
+    sendSchedulingMsgIFS,getCarVideoInfoIFS,getCarIconsIFS
 } from '../services/GPSRealTimeIFS';
 import {GPS_ICON} from '../utils/iconMap';
 import {VtxTime,VtxUtil,delay} from '../utils/util';
@@ -181,6 +181,8 @@ export default {
             videoAddress:['','','',''],
             showVideo:false,
         },
+        // 车辆图标
+        carIcons:{},//{carTypeId:{iconType:imgId}}
         // 全局
         currentClickPoint:{},//当前点击的点位
         carsInfo:{},//车辆全部信息
@@ -296,6 +298,40 @@ export default {
                     mapCfg: {mapCenter}
                 }})
                 localStorage.setItem('map_center',JSON.stringify(mapCenter));
+            }
+        },
+        // 获取地图车辆图例
+        *getMapIcons({ payload }, { call, put, select }){
+            const {data} = yield call(getCarIconsIFS);
+            
+            if(data && data.data && Array.isArray(data.data.list) && data.data.list.length>0){
+                const carIconObj = (function(iconList){
+                    let carIconObj = {};//筛选后的图标对象
+                    const availabelIconTypes = ['carTreePark','carTreeOnline','carTreeOffline','carMapRightOnline'];//需要的图标类型
+                    for(let i=0,len=iconList.length;i<len;i++){
+                        const currentIcon = iconList[i];
+                        const imgFileId = (currentIcon.iconId.match(/"id":"(\S+?)"/)||[])[1];//图标文件id
+                        if(imgFileId && availabelIconTypes.indexOf(currentIcon.iconType)!=-1){
+                            if(carIconObj[currentIcon.carTypeId]){
+                                carIconObj[currentIcon.carTypeId][currentIcon.iconType] = data.data.url+imgFileId;
+                            }
+                            else{
+                                carIconObj[currentIcon.carTypeId] = {
+                                    name:currentIcon.carType,
+                                    [currentIcon.iconType]:data.data.url+imgFileId
+                                };
+                            }
+                        }
+                    }
+                    return carIconObj;
+                })(data.data.list);
+
+                yield put({
+                    type:'save',
+                    payload:{
+                        carIcons:carIconObj
+                    }
+                })
             }
         },
         // 获取车辆树
@@ -549,7 +585,6 @@ export default {
             const {carId,moveMap,calPointsDistance,isOilTab} = payload;
             const state = yield select(({realTime})=>realTime); 
             const thisCarInfo = state.carsInfo[carId];
-            console.log(thisCarInfo)
             if(!thisCarInfo){
                 console.error('没有此点位');
                 return

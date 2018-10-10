@@ -42,6 +42,8 @@ class RealTime extends React.Component {
         });
         // 设置中心点
         dispatch({type:'realTime/getCenterLocation'});
+        // 获取地图图例信息
+        dispatch({type:'realTime/getMapIcons'});
         // 获取车辆点位
         dispatch({type:'realTime/getCarPoints'});
         
@@ -369,11 +371,16 @@ class RealTime extends React.Component {
     }
     // 生成地图点位
     generateMapCarPoints(carIds){
-        const {leftPanelCfg,carsInfo,refreshInterval,hideCarCode,bkCfg} = this.props;
+        const {leftPanelCfg,carsInfo,refreshInterval,hideCarCode,bkCfg,carIcons} = this.props;
         const carStatusIcon = {
             '行驶在线': GPS_ICON.map.carOn,
             '停车在线': GPS_ICON.map.carStop,
             '离线': GPS_ICON.map.carOff,
+        }
+        const carStatusMapping = {
+            '行驶在线': 'carMapRightOnline',
+            '停车在线': 'carTreePark',
+            '离线': 'carTreeOffline',
         }
         const labelClass = (()=>{
             if(hideCarCode){
@@ -384,14 +391,17 @@ class RealTime extends React.Component {
         // 地图点位排序按上报时间
         return (carIds||leftPanelCfg.selectedNodes).filter((id)=>id in carsInfo).map((id)=>carsInfo[id]).sort((a,b)=>{
             return a.equipmentTime < b.equipmentTime?1:-1;
-        }).map((item)=>{           
+        }).map((item)=>{
+            const carIconUrl = carIcons[item.carClassesCode] && carIcons[item.carClassesCode][carStatusMapping[item.carStatus]||'NEWSTATUS'] ? 
+            carIcons[item.carClassesCode][carStatusMapping[item.carStatus]] :
+            carStatusIcon[item.carStatus];      
             return {
                 id:item.carId,
                 latitude:item.latitudeDone,
                 longitude:item.longitudeDone,
                 canShowLabel:true,
                 labelClass,
-                url: carStatusIcon[item.carStatus]||'',
+                url: carIconUrl,
                 pointType:'car',
                 config:{
                     width:30,
@@ -564,7 +574,7 @@ class RealTime extends React.Component {
             carsInfo,bottomPanelCfg, pageStatus,refreshInterval,trackCfg,
             toolboxCfg,refreshWindow,batchTrackWindow,showLegend,
             markWindow,repairShop,gasStation,carStatistics,bkCfg,
-            sendMsgWindow,videoCfg,showStatistics} = this.props;
+            sendMsgWindow,videoCfg,showStatistics,carIcons} = this.props;
         const t = this;
 
         // 1.地图参数: 车辆，跟踪路线，关注区图层，加油站维修厂等设施
@@ -804,7 +814,14 @@ class RealTime extends React.Component {
         }
 
         // 图例
+        const iconList = Object.keys(carIcons).filter((carType)=>carIcons[carType].carTreeOnline).map((carType)=>{
+            return {
+                name:carIcons[carType].name,
+                iconUrl:carIcons[carType].carTreeOnline
+            }
+        })
         const legendBoxProps = {
+            iconList,
             closeLegendBox(){
                 t.updateModel({
                     showLegend:false

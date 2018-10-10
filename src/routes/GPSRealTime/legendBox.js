@@ -29,6 +29,15 @@ export default function(props){
                     <div>报警</div>
                 </li> */}
             </ul>
+            <ul style={{marginTop:'10px'}}>
+                {
+                    props.iconList.map((icon,index)=><li key={index}>
+                        <img src={icon.iconUrl}/>
+                        <div>{icon.name}</div>
+                    </li>)
+                }
+                
+            </ul>
         </div>
     )
 }

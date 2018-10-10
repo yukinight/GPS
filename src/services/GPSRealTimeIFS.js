@@ -131,3 +131,12 @@ export function getCarVideoInfoIFS(postData) {
   });
 }
 
+//获取地图图标的图例
+export function getCarIconsIFS(postData) {
+  return request(
+      '/api/cloud/gps/api/np/v2/baseCarIcon/list.smvc',
+      {
+        body:postData
+      }
+    );
+}
