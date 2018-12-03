@@ -191,7 +191,7 @@ class LeftPanel extends React.Component{
                                         }}} style={{paddingBottom:'18px'}}>
                                             {
                                                 trackQueryForm.selectedCarInfo.carCode?<Tag color="#2db7f5">{trackQueryForm.selectedCarInfo.carCode}</Tag>
-                                                :'无'
+                                                :''
                                             }
                                         </div>
 

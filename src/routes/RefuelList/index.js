@@ -14,6 +14,12 @@ class RefuelList extends React.Component{
     constructor(props){
         super(props)
     }
+    componentDidMount=()=>{
+        const {dispatch} = this.props;
+        dispatch({ type: 'common/getTenantInfo' }).then(() => {
+            dispatch({ type: 'refuelList/setMapCfg' });
+        })
+    }
     onQuery=()=>{
         this.props.dispatch({
             type: 'refuelList/updateState',

@@ -1,31 +1,28 @@
 {
   "entry": "src/index.js",
   "proxy": {
-    "/api": {
+    "/cloud/gps": {
+      "target": "http://192.168.1.207:8082/",
+      "changeOrigin": true
+    },
+    "/cloud/oil": {
+      "target": "http://222.92.212.126:9082/",
+      "changeOrigin": true
+    },
+    "/cloud/management":{
       "target": "http://120.26.218.105:12020/",
-      "changeOrigin": true,
-      "pathRewrite": { "^/api" : "" }
+      "changeOrigin": true
     },
     "/lbs": {
       "target": "http://120.26.218.105:12020/",
       "changeOrigin": true,
       "pathRewrite": { "^/lbs" : "" }
     },
-    "/alarm": {
-      "target": "http://120.26.218.105:12020/",
-      "changeOrigin": true,
-      "pathRewrite": { "^/alarm" : "" }
-    },
     "/video": {
       "target": "http://116.62.100.64:18096/",
       "changeOrigin": true,
       "pathRewrite": { "^/video" : "" }
-    },
-     "/oilManage": {
-      "target": "http://222.92.212.126:9082/",
-      "changeOrigin": true,
-      "pathRewrite": { "^/oilManage" : "" }
-    }
+    }    
   },
   "disableDynamicImport": true,
   "extraBabelPlugins": [

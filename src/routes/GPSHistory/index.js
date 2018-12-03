@@ -2,6 +2,7 @@ import React from 'react';
 import {connect} from 'dva';
 import {VtxModal,VtxModalList,VtxDate} from 'vtx-ui';
 import { Button, Switch,Input  } from 'antd';
+import moment from 'moment';
 import SearchInput from '../GPSRealTime/searchInput';
 import ToolBox from '../GPSRealTime/toolBox';
 import LeftPanel from './leftPanel';
@@ -25,37 +26,58 @@ class GPSHistory extends React.Component{
     }
     componentDidMount(){
         const {dispatch} = this.props;
-      
+    
         // 获取通用配置
-        dispatch({
-            type:'history/getGPSConfig'
-        }).then(()=>{
+        Promise.all([
+            dispatch({type:'history/getGPSConfig'}),
+            dispatch({type:'common/getTenantInfo'}),
+        ]).then(()=>{
             // 实时页面跳转过来查询车辆轨迹
-            if(VtxUtil.getUrlParam('carId')){
-                this.updateModel({
+            if(VtxUtil.getUrlParam('carId')){ 
+                const carId = VtxUtil.getUrlParam('carId'),
+                carCode = VtxUtil.getUrlParam('carCode'),
+                startTime = VtxUtil.getUrlParam('startTime'),
+                endTime = VtxUtil.getUrlParam('endTime');
+
+                let updatedObj = {
                     trackQueryForm:{
-                        selectedCarInfo:{
-                            carId:VtxUtil.getUrlParam('carId'),
-                            carCode:decodeURIComponent(VtxUtil.getUrlParam('carCode'))
-                        }
+                        selectedCarInfo:{carId:decodeURIComponent(carId)}
                     }
-                })
+                }
+                if(carCode){
+                    updatedObj.trackQueryForm.selectedCarInfo.carCode = decodeURIComponent(carCode);
+                }
+                if(startTime){
+                    const startTime_moment = moment(decodeURIComponent(startTime));
+                    if(startTime_moment.isValid()){
+                        updatedObj.trackQueryForm.startTime = startTime_moment;
+                    }
+                }
+                if(endTime){
+                    const endTime_moment = moment(decodeURIComponent(endTime));
+                    if(endTime_moment.isValid()){
+                        updatedObj.trackQueryForm.endTime = endTime_moment;
+                    }
+                }
+                this.updateModel(updatedObj);
                 dispatch({
                     type:'history/searchByCarTimeSlot'
                 })
             }
+
+            // 设置地图中心点
+            dispatch({
+                type:'history/setMapCfg'
+            });
+            // 获取关注区列表
+            dispatch({type:'history/getFocusAreaList'});
         })
-        // 设置地图中心点
-        dispatch({
-            type:'history/getCenterLocation'
-        });
+      
         // 获取车辆树
         dispatch({
             type:'history/getCarTree',
             payload:{initial:true}
         });
-        // 获取关注区列表
-        dispatch({type:'history/getFocusAreaList'});
         
     }
     // 车辆历史数据,树查询
@@ -865,7 +887,10 @@ class GPSHistory extends React.Component{
         return (
             
             <div className={`${style.rm} ${bkCfg.isNarrow?style.narrowLeft:''}`}>
-                <TrackMap {...mapProps} ref={(inst)=>{if(inst)t.map=inst}}/>
+                {
+                    mapCfg.mapType?<TrackMap {...mapProps} ref={(inst)=>{if(inst)t.map=inst}}/>:null
+                }
+                
                 <SearchInput {...searchInputProps}/>
                 <LeftPanel {...leftPanelProps} ref={(ins)=>{if(ins)t.leftPanelInstance = ins}}/>
                 <BottomPanel {...bottomPanelProps} ref={(ins)=>{if(ins)t.bottomPanelInstance = ins;}}/>

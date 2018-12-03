@@ -6,27 +6,27 @@ const { ConnectedRouter } = routerRedux;
 
 const routes = [{
     path: '/',
-    models: () => [],
-    component: () => import('./routes/IndexPage')
+    models: () => [import('./models/commonM'),import('./models/GPSRealTimeM')],
+    component: () => import('./routes/GPSRealTime/index')
 },{
     path: '/realTime',
-    models: () => [import('./models/GPSRealTimeM')],
+    models: () => [import('./models/commonM'),import('./models/GPSRealTimeM')],
     component: () => import('./routes/GPSRealTime/index')
 },{
     path: '/history',
-    models: () => [import('./models/GPSHistoryM')],
+    models: () => [import('./models/commonM'),import('./models/GPSHistoryM')],
     component: () => import('./routes/GPSHistory/index')
 },{//加油查询
     path: '/refuelList',
-    models: () => [import('./models/refuelListM')],
+    models: () => [import('./models/commonM'),import('./models/refuelListM')],
     component: () => import('./routes/RefuelList')
 },{//油耗异常
     path: '/oilException',
-    models: () => [import('./models/oilExceptionM')],
+    models: () => [import('./models/commonM'),import('./models/oilExceptionM')],
     component: () => import('./routes/OilException')
 },{//加油站管理
     path: '/stationManage',
-    models: () => [import('./models/stationManageM')],
+    models: () => [import('./models/commonM'),import('./models/stationManageM')],
     component: () => import('./routes/StationManage')
 }];
 

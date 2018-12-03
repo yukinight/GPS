@@ -34,18 +34,22 @@ class RealTime extends React.Component {
     componentDidMount(){
         const {dispatch} = this.props;
         // 获取通用配置
-        dispatch({type:'realTime/getGPSConfig'}).then(()=>{
+        Promise.all([
+            dispatch({type:'realTime/getGPSConfig'}),
+            dispatch({type:'common/getTenantInfo'}),
+        ]).then(()=>{
             // 获取车辆树(树的勾选状态需要等待配置返回才能确定)
             dispatch({type:'realTime/getCarTree',payload:{initial:true}});
             // 获取关注区列表
             dispatch({type:'realTime/getFocusAreaList'});
+            // 设置中心点
+            dispatch({type:'realTime/setMapCfg'});
+            // 获取车辆点位
+            dispatch({type:'realTime/getCarPoints'});
         });
-        // 设置中心点
-        dispatch({type:'realTime/getCenterLocation'});
+        
         // 获取地图图例信息
         dispatch({type:'realTime/getMapIcons'});
-        // 获取车辆点位
-        dispatch({type:'realTime/getCarPoints'});
         
         this.setRefreshTimer();
     }
@@ -208,13 +212,15 @@ class RealTime extends React.Component {
     // 打开调度信息窗口
     openMsgWindow(carId){
         const thisCarInfo = this.props.carsInfo[carId];
-        if(!(thisCarInfo.driver && thisCarInfo.driverPhone)){
-            message.warn('无法获取车辆责任人联系方式');
-            return;
-        }
-        if(!this.props.bkCfg.smsTemplate){
-            message.warn('没有配置模板内容');
-            return;
+        if(this.props.bkCfg.dispatchType == 'sms'){
+            if(!thisCarInfo.driverPhone){
+                message.warn('无法获取车辆责任人联系方式');
+                return;
+            }
+            if(!this.props.bkCfg.smsTemplate){
+                message.warn('没有配置模板内容');
+                return;
+            }
         }
         this.updateModel({
             sendMsgWindow:{
@@ -392,9 +398,13 @@ class RealTime extends React.Component {
         return (carIds||leftPanelCfg.selectedNodes).filter((id)=>id in carsInfo).map((id)=>carsInfo[id]).sort((a,b)=>{
             return a.equipmentTime < b.equipmentTime?1:-1;
         }).map((item)=>{
+            // 车头向右的图标
             const carIconUrl = carIcons[item.carClassesCode] && carIcons[item.carClassesCode][carStatusMapping[item.carStatus]||'NEWSTATUS'] ? 
             carIcons[item.carClassesCode][carStatusMapping[item.carStatus]] :
-            carStatusIcon[item.carStatus];      
+            carStatusIcon[item.carStatus];
+            // 车头向左的图标,只有车辆在线时的移动动画需要
+            const carLeftIconUrl = item.carStatus=='行驶在线' && carIcons[item.carClassesCode] && carIcons[item.carClassesCode]['carMapLeftOnline'] ?
+            carIcons[item.carClassesCode]['carMapLeftOnline'] : null;
             return {
                 id:item.carId,
                 latitude:item.latitudeDone,
@@ -402,6 +412,7 @@ class RealTime extends React.Component {
                 canShowLabel:true,
                 labelClass,
                 url: carIconUrl,
+                urlleft: carLeftIconUrl,
                 pointType:'car',
                 config:{
                     width:30,
@@ -410,7 +421,7 @@ class RealTime extends React.Component {
                     markerContentY:-15,
                     isAnimation:true,
                     animationDelay:5,
-                    autoRotation:  item.carStatus!='停车在线',
+                    autoRotation:  item.carStatus=='行驶在线',
                     labelContent:bkCfg.isShowCarClasses?`${item.carCode} ${item.carClassesName}`:item.carCode
                 }
             }
@@ -858,8 +869,10 @@ class RealTime extends React.Component {
                     pageStatus!='normal'?<div className={style.trackTip}>当前正处于车辆跟踪状态</div>
                     :null
                 }
-                <VtxOptMap {...mapProps} getMapInstance={(map)=>{if(map)t.map=map}} />
-               
+                {
+                    mapCfg.mapType?<VtxOptMap {...mapProps} getMapInstance={(map)=>{if(map)t.map=map}} />:null
+                }
+                
                 <SearchInput {...searchInputProps}/>
                 <LeftPanel {...leftPanelProps} ref={(ins)=>{if(ins)t.leftPanelInstance = ins}}/>
                 <BottomPanel {...bottomPanelProps} ref={(ins)=>{if(ins)t.bottomPanelInstance = ins}}/>

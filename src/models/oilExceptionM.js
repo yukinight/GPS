@@ -21,7 +21,7 @@ export default{
         pageSize: 10,
         totalItems: 0,
         loading: false,
-        mapType: 'bmap',//地图类型
+        mapType: '',//地图类型
         wkid: '4326',//坐标系编号与mapServer的wkid
         mapServer: {//只有arcgis需要 gis服务
 
@@ -51,6 +51,16 @@ export default{
         }
     },
     effects:{
+        //设置中心点
+        *setMapCfg({ payload }, { call, put, select }) {
+            const { mapType } = yield select(({ common }) => common);
+            yield put({
+                type: 'updateState',
+                payload: {
+                    mapType
+                }
+            })
+        },
         //获取作业单位结构树
         *getCompanyTree({ payload }, { call, put, select }) {
             const { data } = yield call(getDepartTree, getBaicPostData({}));
@@ -291,15 +301,15 @@ export default{
             // dispatch({type:'fetchRemote'})
             history.listen(({ pathname }) => {
                 if (pathname === '/oilException') {
-                    const type=VtxUtil.getUrlParam('type');
-                    if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap'){
-                        dispatch({
-                            type:'updateState',
-                            payload:{
-                                mapType:type
-                            }
-                        })
-                    }
+                    // const type=VtxUtil.getUrlParam('type');
+                    // if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap'){
+                    //     dispatch({
+                    //         type:'updateState',
+                    //         payload:{
+                    //             mapType:type
+                    //         }
+                    //     })
+                    // }
                     dispatch({ type: 'getCompanyTree' });
                     dispatch({ type: 'getCarCodeTree' });
                     dispatch({ type: 'getTableData' });

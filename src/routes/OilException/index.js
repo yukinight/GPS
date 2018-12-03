@@ -14,6 +14,12 @@ class OilException extends React.Component {
     constructor(props) {
         super(props)
     }
+    componentDidMount = () => {
+        const { dispatch } = this.props;
+        dispatch({ type: 'common/getTenantInfo' }).then(() => {
+            dispatch({ type: 'oilException/setMapCfg' });
+        })
+    }
     onQuery = () => {
         this.props.dispatch({
             type: 'oilException/updateState',

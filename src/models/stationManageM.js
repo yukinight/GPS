@@ -12,8 +12,7 @@ export default {
         totalItems: 0,
         selectedRowKeys:[],
         loading: false,
-        mapType: 'bmap',//地图类型
-        wkid: '4326',//坐标系编号与mapServer的wkid
+        mapType: '',//地图类型
     },
     reducers: {
         updateState(state, action) {
@@ -30,6 +29,16 @@ export default {
         }
     },
     effects:{
+        //设置中心点
+        *setMapCfg({ payload }, { call, put, select }) {
+            const { mapType } = yield select(({ common }) => common);
+            yield put({
+                type: 'updateState',
+                payload: {
+                    mapType
+                }
+            })
+        },
         *getTableData({ payload }, { call, put, select }) {
             const { name, pageSize, currentPage } = yield select(({ stationManage }) => stationManage);
             yield put({
@@ -200,15 +209,15 @@ export default {
         // dispatch({type:'fetchRemote'})
         history.listen(({ pathname }) => {
             if (pathname === '/stationManage') {
-                const type = VtxUtil.getUrlParam('type');
-                if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap') {
-                    dispatch({
-                        type: 'updateState',
-                        payload: {
-                            mapType: type
-                        }
-                    })
-                }
+                // const type = VtxUtil.getUrlParam('type');
+                // if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap') {
+                //     dispatch({
+                //         type: 'updateState',
+                //         payload: {
+                //             mapType: type
+                //         }
+                //     })
+                // }
                 dispatch({ type: 'getTableData' });
             }
         });

@@ -78,7 +78,13 @@ class LeftPanel extends React.Component{
     }
     jumpToHistory(carId){
         const carCode = this.props.data.carsInfo[carId].carCode;
-        window.open(`/#/history/?carId=${carId}&carCode=${carCode}&tenantId=${VtxUtil.getUrlParam('tenantId')}&userId=${VtxUtil.getUrlParam('userId')}`)
+        const historyURL = location.href.replace(/#\/realtime/i,'#/history');
+        if(historyURL.indexOf('?')!=-1){
+            window.open(location.href.replace(/#\/realtime/i,'#/history')+`&carId=${carId}&carCode=${carCode}`);
+        }
+        else{
+            window.open(location.href.replace(/#\/realtime/i,'#/history')+`?carId=${carId}&carCode=${carCode}`);
+        }
     }
     render(){
         const t = this;
@@ -90,7 +96,7 @@ class LeftPanel extends React.Component{
         let treePnStyle = {};
         let detailPnStyle = {};
 
-        const ifScheduleTmp = bkCfg.dispatchType == 'sms';//后台配置调度类型是否是调度屏
+        // const ifScheduleTmp = bkCfg.dispatchType == 'sms';//后台配置调度类型是否是调度屏
         // 面板高度切换
         switch(t.state.detailPnState){
             case 0:
@@ -173,7 +179,6 @@ class LeftPanel extends React.Component{
                 // 两个后台配置开关
                 ifShowOil:bkCfg.isOil,
                 ifShowRpm:bkCfg.showRpm,
-                ifScheduleTmp,
                 // 下面两个参数是用来判断组件是否要刷新
                 pageStatus,
                 trackPointsId:trackCfg.trackPointsId
@@ -210,11 +215,10 @@ class LeftPanel extends React.Component{
                 }}>查看视频</li>):null
             }
             {
-                ifScheduleTmp && !(carsInfo[t.state.rightClickMenu.carId]||{}).isWithScheduleScreen ?
-                null:
+                (carsInfo[t.state.rightClickMenu.carId]||{}).isWithScheduleScreen ?
                 <li onClick={()=>{
                     openMsgWindow(t.state.rightClickMenu.carId);
-                }}>调度信息发送</li>
+                }}>调度信息发送</li>:null
             }
         </ul>;
 
@@ -366,7 +370,7 @@ class DetailPn extends React.Component{
        
         // 数据
         const {carInfo,pageStatus,pointType,gasStationInfo,ifShowOil,ifShowRpm,
-            ifScheduleTmp,videoCfg} = this.props.data;
+            videoCfg} = this.props.data;
         // 函数
         const {trackOneCar,stopTrack,carIsTracking,openMsgWindow,getVideo,closeVideo,
             jumpToHistory} = this.props;
@@ -560,10 +564,10 @@ class DetailPn extends React.Component{
                                     }}>查看视频</Button>):null
                                 }
                                 {
-                                    ifScheduleTmp && !carInfo.isWithScheduleScreen ? null:
+                                    carInfo.isWithScheduleScreen ? 
                                     <Button type="primary" onClick={()=>{
                                         openMsgWindow(carInfo.carId);
-                                    }}>调度信息发送</Button>
+                                    }}>调度信息发送</Button>:null
                                 }
                                 
                             </div>

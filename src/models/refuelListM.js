@@ -20,11 +20,7 @@ export default{
         pageSize:10,
         totalItems:0,
         loading:false,
-        mapType:'bmap',//地图类型
-        wkid: '4326',//坐标系编号与mapServer的wkid
-        mapServer: {//只有arcgis需要 gis服务
-
-        },
+        mapType:'',//地图类型
         setVisiblePoints:false,
         detail:{
             oilLineData:{},//油耗曲线
@@ -48,6 +44,16 @@ export default{
         }
     },
     effects:{
+        //设置中心点
+        *setMapCfg({ payload }, { call, put, select }) {
+            const { mapType } = yield select(({ common }) => common);
+            yield put({
+                type: 'updateState',
+                payload: {
+                    mapType
+                }
+            })
+        },
         //获取车辆类型下拉框
         *getCarTypeSelect({payload},{call,put,select}){
             const {data} = yield call(getCarTypeSelect,getBaicPostData({}));
@@ -267,15 +273,16 @@ export default{
             // dispatch({type:'fetchRemote'})
             history.listen(({ pathname }) => {
                 if (pathname === '/refuelList') {
-                    const type = VtxUtil.getUrlParam('type');
-                    if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap') {
-                        dispatch({
-                            type: 'updateState',
-                            payload: {
-                                mapType: type
-                            }
-                        })
-                    }
+                    // const type = VtxUtil.getUrlParam('type');
+                    // if (type === 'amap' || type === 'bmap' || type === 'tmap' || type === 'gmap') {
+                    //     dispatch({
+                    //         type: 'updateState',
+                    //         payload: {
+                    //             mapType: type
+                    //         }
+                    //     })
+                    // }
+                    
                     dispatch({ type: 'getCarTypeSelect' });
                     dispatch({ type: 'getCompanyTree' });
                     dispatch({ type: 'getCarCodeTree' });

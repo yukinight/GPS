@@ -11,6 +11,12 @@ class StationManage extends React.Component {
     constructor(props) {
         super(props)
     }
+    componentDidMount = () => {
+        const { dispatch } = this.props;
+        dispatch({ type: 'common/getTenantInfo' }).then(() => {
+            dispatch({ type: 'stationManage/setMapCfg' });
+        })
+    }
     onQuery = () => {
         this.props.dispatch({
             type: 'stationManage/updateState',

@@ -6,12 +6,10 @@ import {getGPSConfigIFS,getCarTypeTreeIFS,getCarOrgTreeIFS,getTenantMapInfoIFS,
 } from '../services/GPSRealTimeIFS';
 import {GPS_ICON} from '../utils/iconMap';
 import {VtxTime,VtxUtil,delay} from '../utils/util';
-import {carTreeDataProcessor,mapTypeCfg} from '../utils/GPSUtil';
+import {carTreeDataProcessor} from '../utils/GPSUtil';
 import u from 'updeep';
 import {message} from 'antd';
 
-const urlmap = VtxUtil.getUrlParam('mapType');
-const MAPTYPE = mapTypeCfg[urlmap=='ac'?'arcgis':'baidu'];
 
 // 工具栏默认配置
 let toolboxCfg = [
@@ -38,7 +36,7 @@ export default {
         bkCfg:{
             // 调度信息配置
             smsTemplate:'',
-            dispatchType:'word',
+            dispatchType:'word',//word:调度屏信息发送，sms:短信模板发送
             // 是否展示油耗
             isOil:false,
             // 地图图层
@@ -101,7 +99,7 @@ export default {
             // mapServer:{type:'gis',url:['http://www.hangzhoumap.gov.cn/Tile/ArcGISFlex/HZTDTVECTORBLEND.gis']},
             mapZoomLevel:12,
             setZoomLevel:false,
-            mapType:MAPTYPE.frontEnd,
+            mapType:null,
             mapDraw:{}
         },
         // 底部面板
@@ -282,23 +280,31 @@ export default {
             }
         },
         // 设置中心点
-        *getCenterLocation({ payload }, { call, put, select }){
-            const localMapCenter = localStorage.getItem('map_center');
-            if(localMapCenter){
-                yield put({type:'save',payload:{
-                    mapCfg: {mapCenter:JSON.parse(localMapCenter)}
-                }})
-            }
-            const {data} = yield call(getTenantMapInfoIFS,{
-                coordType:MAPTYPE.backEnd
-            });
-            if(data && data.data && data.data.longitudeDone && data.data.latitudeDone){
-                const mapCenter = [data.data.longitudeDone,data.data.latitudeDone];
-                yield put({type:'save',payload:{
-                    mapCfg: {mapCenter}
-                }})
-                localStorage.setItem('map_center',JSON.stringify(mapCenter));
-            }
+        *setMapCfg({ payload }, { call, put, select }){
+            // const localMapCenter = localStorage.getItem('map_center');
+            // if(localMapCenter){
+            //     yield put({type:'save',payload:{
+            //         mapCfg: {mapCenter:JSON.parse(localMapCenter)}
+            //     }})
+            // }
+            // const commonState = yield select(({common})=>common);
+            // const {data} = yield call(getTenantMapInfoIFS,{
+            //     coordType:commonState.coordType
+            // });
+            // if(data && data.data && data.data.longitudeDone && data.data.latitudeDone){
+            //     const mapCenter = [data.data.longitudeDone,data.data.latitudeDone];
+            //     yield put({type:'save',payload:{
+            //         mapCfg: {mapCenter}
+            //     }})
+            //     localStorage.setItem('map_center',JSON.stringify(mapCenter));
+            // }
+            const commonState = yield select(({common})=>common);
+            yield put({type:'save',payload:{
+                mapCfg: {
+                    mapType:commonState.mapType,
+                    mapCenter:commonState.tenantPosition
+                }
+            }})
         },
         // 获取地图车辆图例
         *getMapIcons({ payload }, { call, put, select }){
@@ -307,7 +313,7 @@ export default {
             if(data && data.data && Array.isArray(data.data.list) && data.data.list.length>0){
                 const carIconObj = (function(iconList){
                     let carIconObj = {};//筛选后的图标对象
-                    const availabelIconTypes = ['carTreePark','carTreeOnline','carTreeOffline','carMapRightOnline'];//需要的图标类型
+                    const availabelIconTypes = ['carTreePark','carTreeOnline','carTreeOffline','carMapRightOnline','carMapLeftOnline'];//需要的图标类型
                     for(let i=0,len=iconList.length;i<len;i++){
                         const currentIcon = iconList[i];
                         const imgFileId = (currentIcon.iconId.match(/"id":"(\S+?)"/)||[])[1];//图标文件id
@@ -437,9 +443,10 @@ export default {
         // 获取车辆信息
         getCarPoints: [function *({ payload }, { call, put, select }){
             const state = yield select(({realTime})=>realTime);
+            const commonState = yield select(({common})=>common);
             const clearOldCarInfo = state.pageStatus=='normal';//如果当前页面处于非跟踪状态，应清除上次车辆信息数据，否则应保留
             let postData = {
-                coordType:MAPTYPE.backEnd
+                coordType:commonState.coordType
             };
             // 输入框查询条件
             switch(state.searchCfg.searchWay){
@@ -516,9 +523,10 @@ export default {
         // 根据经纬度取实际地址，更新到车辆信息数据中
         *setCarAddressByLngLat({ payload }, { call, put, select }){
             const {points} = payload;
+            const commonState = yield select(({common})=>common);
             if(points.length==0)return;
             let postData = {
-                coordtype:MAPTYPE.mapCoord,
+                coordtype:commonState.coordType,
                 batch:true,
                 location:points.map((item)=>`${item.longitude},${item.latitude}`).join(';')
             }
@@ -682,7 +690,7 @@ export default {
             const {carId} = payload;
             const today = VtxTime.getFormatTime();
             const state = yield select(({realTime})=>realTime); 
-
+            const commonState = yield select(({common})=>common);
             if(state.bottomPanelCfg.carOilData.carId==carId){
                 return;
             };
@@ -704,7 +712,7 @@ export default {
             })
             const {data} = yield call(getCarOilLineIFS,{
                 carId,
-                coordType:MAPTYPE.backEnd,
+                coordType:commonState.coordType,
                 startTime:`${today} 00:00:00`,
                 endTime:`${today} 23:59:59`
             })
@@ -764,6 +772,7 @@ export default {
         // 跟踪车辆数据
         getTrackData: [function *({ payload }, { call, put, select }){
             const state = yield select(({realTime})=>realTime);
+            const commonState = yield select(({common})=>common);
             const trackCarIdsList = state.trackCfg.trackPointsId;
             const trackLines = state.trackCfg.trackLines;
             const trackRecord = state.trackCfg.trackRecord;
@@ -771,7 +780,7 @@ export default {
             const {data} = yield call(trackMultiCarRealTimeDataIFS,{
                 needOil:'1',
                 carIds:trackCarIdsList.join(','),
-                coordType:MAPTYPE.backEnd,
+                coordType:commonState.coordType,
                 startTimes: trackCarIdsList.map(carId=>carId in trackLines && carId in carsInfo ?carsInfo[carId].equipmentTime:'').join(',')
             })
            
@@ -812,7 +821,7 @@ export default {
                 }
                 // 获取跟踪点位的实际地址信息
                 let addressPostData = {
-                    coordtype:MAPTYPE.mapCoord,
+                    coordtype:commonState.coordType,
                     batch:true,
                     location:newTrackRecord.map((item)=>`${item.longitudeDone},${item.latitudeDone}`).join(';')
                 }
@@ -878,8 +887,9 @@ export default {
         // 获取关注区详情数据
         *getFocusAreaDetail({ payload }, { call, put, select }){
             const {areaId} = payload;
+            const commonState = yield select(({common})=>common);
             const {data} = yield call(getFocusAreaDetailIFS,{
-                coordType:MAPTYPE.backEnd,
+                coordType:commonState.coordType,
                 typeId:areaId
             });
            
@@ -896,8 +906,9 @@ export default {
         },
         // 获取加油站数据
         *getGasStation({ payload }, { call, put, select }){
+            const commonState = yield select(({common})=>common);
             const {data} = yield call(getGasStationListIFS,{
-                coordType:MAPTYPE.backEnd
+                coordType:commonState.coordType
             })
             if(data && data.data){
                 const mapStationPoints = data.data.map((item)=>{
@@ -934,8 +945,9 @@ export default {
         },
         // 获取维修厂数据
         *getRepairShop({ payload }, { call, put, select }){
+            const commonState = yield select(({common})=>common);
             const {data} = yield call(getRepairShopListIFS,{
-                coordType:MAPTYPE.backEnd
+                coordType:commonState.coordType
             })
             if(data && data.data){
                 const mapRepairShopPoints = data.data.map((item)=>{

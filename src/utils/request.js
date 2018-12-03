@@ -13,6 +13,7 @@ export default function request(url, options={}) {
         tenantId: VtxUtil.getUrlParam('tenantId'),
         userId: VtxUtil.getUrlParam('userId'),
         carClassesCode: VtxUtil.getUrlParam('carClassesCode'),
+        token: VtxUtil.getUrlParam('token')
     };
     if(options.body){   
         for(let k in options.body){
@@ -39,9 +40,34 @@ export default function request(url, options={}) {
             }
         });
     });
-    return ajaxPropmise.then(data => ({ data }))
-    .catch(err => {
-        return { data: null };
+    // return ajaxPropmise.then(data => ({ data }))
+    // .catch(err => {
+    //     return { data: null };
+    // });
+    return ajaxPropmise.then((data) => {
+        if(data.result == '10001' || data.result == "10002"){
+            message.error(data.msg);
+            if(top != window){
+                window.top.postMessage('logout','*');
+            }
+            location.href = '/login';
+        }
+        if(data.result == '10003'){
+            message.error(data.msg);
+            if(top != window){
+                window.top.postMessage('noauthorize','*');
+            }
+        }
+        return {data};
+    }).catch((data)=>{
+        if(data.status == '401'){
+            message.error("没有权限");
+            if(top != window){
+                window.top.postMessage('logout','*');
+            }
+            location.href = '/login';
+        }
+        return null;
     });
 }
 
@@ -57,6 +83,7 @@ export function requestJson(url, options={}) {
     let qstr = {
         tenantId: VtxUtil.getUrlParam('tenantId'),
         userId: VtxUtil.getUrlParam('userId'),
+        token: VtxUtil.getUrlParam('token'),
     }
     if(options && options.urlQuery) {
         qstr = {
@@ -81,8 +108,33 @@ export function requestJson(url, options={}) {
             }
         });
     });
-    return ajaxPropmise.then(data => ({ data }))
-    .catch(err => {
-        return { data: null };
+    // return ajaxPropmise.then(data => ({ data }))
+    // .catch(err => {
+    //     return { data: null };
+    // });
+    return ajaxPropmise.then((data) => {
+        if(data.result == '10001' || data.result == "10002"){
+            message.error(data.msg);
+            if(top != window){
+                window.top.postMessage('logout','*');
+            }
+            location.href = '/login';
+        }
+        if(data.result == '10003'){
+            message.error(data.msg);
+            if(top != window){
+                window.top.postMessage('noauthorize','*');
+            }
+        }
+        return {data};
+    }).catch((data)=>{
+        if(data.status == '401'){
+            message.error("没有权限");
+            if(top != window){
+                window.top.postMessage('logout','*');
+            }
+            location.href = '/login';
+        }
+        return null;
     });
 }

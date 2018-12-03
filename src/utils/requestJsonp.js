@@ -30,9 +30,34 @@ export default function request(url, options) {
             }
         });
     });
-    return ajaxPropmise.then(data => ({ data }))
-        .catch(err => {
-            console.error("请求数据失败")
-            return { data: null };
-        });
+    // return ajaxPropmise.then(data => ({ data }))
+    //     .catch(err => {
+    //         console.error("请求数据失败")
+    //         return { data: null };
+    //     });
+    return ajaxPropmise.then((data) => {
+        if(data.result == '10001' || data.result == "10002"){
+            message.error(data.msg);
+            if(top != window){
+                window.top.postMessage('logout','*');
+            }
+            location.href = '/login';
+        }
+        if(data.result == '10003'){
+            message.error(data.msg);
+            if(top != window){
+                window.top.postMessage('noauthorize','*');
+            }
+        }
+        return {data};
+    }).catch((data)=>{
+        if(data.status == '401'){
+            message.error("没有权限");
+            if(top != window){
+                window.top.postMessage('logout','*');
+            }
+            location.href = '/login';
+        }
+        return null;
+    });
 }
