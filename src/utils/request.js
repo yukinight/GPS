@@ -49,8 +49,10 @@ export default function request(url, options={}) {
             message.error(data.msg);
             if(top != window){
                 window.top.postMessage('logout','*');
+                window.top.location.href = '/login';
+            }else{
+                location.href = '/login';
             }
-            location.href = '/login';
         }
         if(data.result == '10003'){
             message.error(data.msg);
@@ -64,10 +66,12 @@ export default function request(url, options={}) {
             message.error("没有权限");
             if(top != window){
                 window.top.postMessage('logout','*');
+                window.top.location.href = '/login';
+            }else{
+                location.href = '/login';
             }
-            location.href = '/login';
         }
-        return null;
+        return { data: null };
     });
 }
 
@@ -117,8 +121,10 @@ export function requestJson(url, options={}) {
             message.error(data.msg);
             if(top != window){
                 window.top.postMessage('logout','*');
+                window.top.location.href = '/login';
+            }else{
+                location.href = '/login';
             }
-            location.href = '/login';
         }
         if(data.result == '10003'){
             message.error(data.msg);
@@ -132,9 +138,11 @@ export function requestJson(url, options={}) {
             message.error("没有权限");
             if(top != window){
                 window.top.postMessage('logout','*');
+                window.top.location.href = '/login';
+            }else{
+                location.href = '/login';
             }
-            location.href = '/login';
         }
-        return null;
+        return { data: null };
     });
 }

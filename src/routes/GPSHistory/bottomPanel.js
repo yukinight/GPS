@@ -196,7 +196,8 @@ class BottomPanel extends React.Component{
                 <Tabs defaultActiveKey="detail" tabBarExtraContent={RightTopCornerTool} 
                 onChange={(tabKey)=>{
                     t.setState({
-                        currentTabKey:tabKey
+                        currentTabKey:tabKey,
+                        show:true
                     })
                 }}>
                     <TabPane tab="明细数据" key="detail">

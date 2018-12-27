@@ -1,7 +1,7 @@
 import React from 'react';
 import style from './leftPanel.less';
 import st2 from './index.less';
-import {Icon, Button, Dropdown, Menu,Select,Tag,Tabs,message} from 'antd';
+import {Icon, Button, Dropdown, Menu,Select,Tag,Tabs,message,Checkbox } from 'antd';
 import {VtxZtree,VtxModalList,VtxDate} from 'vtx-ui';
 import ReactEcharts from 'echarts-for-react';
 import {deepEqual} from '../../utils/util';
@@ -258,7 +258,20 @@ class LeftPanel extends React.Component{
                                             width:90
                                         }}}/>
                                     </VtxModalList>
+                                    
+                                    
                                     <div style={{textAlign:'center'}}>
+                                        {
+                                            bkCfg.rectifyTrack?<Checkbox onChange={(e)=>{
+                                                update({
+                                                    trackQueryForm:{
+                                                        rectifyTrack: e.target.checked
+                                                    }
+                                                });
+                                            }} checked={trackQueryForm.rectifyTrack}>
+                                                优化历史轨迹
+                                            </Checkbox>:null
+                                        }
                                         <Button type='primary' onClick={searchCarPath}>查询轨迹</Button>
                                     </div>
                                    

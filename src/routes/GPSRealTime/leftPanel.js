@@ -390,7 +390,7 @@ class DetailPn extends React.Component{
             {title:'所属单位',value:companyName},
             {title:'当前速度',value:speed===undefined?'':`${speed} km/h`},
             {title:'当前油量',value:oilMass===undefined?'':`${oilMass} L`},
-            {title:'当前转速',value:`${analog0} rpm`},
+            {title:'当前转速',value:analog0===undefined?'':`${analog0} rpm`},
             {title:'上报时间',value:equipmentTime},
             {title:'GPS状态',value:carStatus},
             {title:'当前位置',value:currentAddress},

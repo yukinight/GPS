@@ -80,10 +80,12 @@ class StationManage extends React.Component {
     render(){
         const t = this;
         const { name, tableData, currentPage, pageSize, totalItems, loading,
-            mapType, wkid, setCenter,selectedRowKeys} = t.props.stationManage;
+              setCenter,selectedRowKeys} = t.props.stationManage;
+        const { mapType, mapServer, minZoom, maxZoom, wkid, } = t.props.common
         const dispatch=t.props.dispatch;
         const modalProps={
             mapType,//地图类型
+             mapServer, minZoom, maxZoom,
             wkid,//坐标系编号与mapServer的wkid
         };
         const columns = [{
@@ -211,6 +213,6 @@ class StationManage extends React.Component {
     }
 }
 function mapStateToProps(state) {
-    return { stationManage: state.stationManage }
+    return { stationManage: state.stationManage, common: state.common, }
 }
 export default connect(mapStateToProps)(StationManage)

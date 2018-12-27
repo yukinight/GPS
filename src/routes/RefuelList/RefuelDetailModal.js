@@ -82,7 +82,8 @@ class RefuelDetailModal extends React.Component{
         const { getFieldDecorator } = this.props.form;
         const { carCode, carClassesName, addTypeName, beforeOilMass, afterOilMass, addOilMass, addOilDateTime,
             billNo, addOilAddress, addTypeCode, beforeTime, afterTime} = this.props.record;
-        const { detail, mapType, wkid, mapServer, setVisiblePoints, detailLoading} = this.props;
+        const { detail, mapType, wkid, mapServer, minZoom,
+            maxZoom, setVisiblePoints, detailLoading} = this.props;
         const { oilLineData, refuelPointData, oilLineData2} = detail;
         const oilOption = { //油耗曲线配置(正常加油的油耗曲线以及隔夜加油的第一天的油耗曲线)
             title:{
@@ -217,6 +218,8 @@ class RefuelDetailModal extends React.Component{
             mapId:this.props.record.id,
             wkid,
             mapType,
+            mapServer, minZoom,
+            maxZoom,
             mapVisiblePoints:{
                 fitView: 'line',
                 type:'all'

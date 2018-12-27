@@ -363,7 +363,7 @@ export function getBaicPostData(postdata = {}) {
             carClassesCode: 'carClassesCode' in postdata ? postdata.carClassesCode : (VtxUtil.getUrlParam('carClassesCode')||'')
         },
         reqMethod: {
-            isJsonP: 1
+            isJsonP: 0
         }
     }
 }

@@ -46,10 +46,9 @@ class RealTime extends React.Component {
             dispatch({type:'realTime/setMapCfg'});
             // 获取车辆点位
             dispatch({type:'realTime/getCarPoints'});
-        });
-        
-        // 获取地图图例信息
-        dispatch({type:'realTime/getMapIcons'});
+            // 获取地图图例信息
+            dispatch({type:'realTime/getMapIcons'});
+        });        
         
         this.setRefreshTimer();
     }
@@ -378,12 +377,14 @@ class RealTime extends React.Component {
     // 生成地图点位
     generateMapCarPoints(carIds){
         const {leftPanelCfg,carsInfo,refreshInterval,hideCarCode,bkCfg,carIcons} = this.props;
-        const carStatusIcon = {
+        // 默认的车辆状态对应图标
+        const defaultCarStatusIcon = {
             '行驶在线': GPS_ICON.map.carOn,
             '停车在线': GPS_ICON.map.carStop,
             '离线': GPS_ICON.map.carOff,
         }
-        const carStatusMapping = {
+        // 车辆状态对应的配置图标类型
+        const carStatusToIconType = {
             '行驶在线': 'carMapRightOnline',
             '停车在线': 'carTreePark',
             '离线': 'carTreeOffline',
@@ -398,13 +399,24 @@ class RealTime extends React.Component {
         return (carIds||leftPanelCfg.selectedNodes).filter((id)=>id in carsInfo).map((id)=>carsInfo[id]).sort((a,b)=>{
             return a.equipmentTime < b.equipmentTime?1:-1;
         }).map((item)=>{
-            // 车头向右的图标
-            const carIconUrl = carIcons[item.carClassesCode] && carIcons[item.carClassesCode][carStatusMapping[item.carStatus]||'NEWSTATUS'] ? 
-            carIcons[item.carClassesCode][carStatusMapping[item.carStatus]] :
-            carStatusIcon[item.carStatus];
-            // 车头向左的图标,只有车辆在线时的移动动画需要
-            const carLeftIconUrl = item.carStatus=='行驶在线' && carIcons[item.carClassesCode] && carIcons[item.carClassesCode]['carMapLeftOnline'] ?
-            carIcons[item.carClassesCode]['carMapLeftOnline'] : null;
+            let carIconUrl,carIconWidth=32,carIconHeight=32,// 车头向右的图标
+            carLeftIconUrl = null;// 车头向左的图标,只有车辆在线时的移动动画需要
+
+            if(item.carClassesCode in carIcons && carStatusToIconType[item.carStatus] in carIcons[item.carClassesCode]){
+                const iconObj = carIcons[item.carClassesCode][carStatusToIconType[item.carStatus]];
+                carIconUrl = iconObj.src;
+                // 如果配置了图片大小，使用图片大小，否则用默认大小
+                iconObj.width && (carIconWidth = iconObj.width);
+                iconObj.height && (carIconHeight = iconObj.height);
+            }
+            else{
+                carIconUrl = defaultCarStatusIcon[item.carStatus];
+            }
+            
+            if(item.carStatus=='行驶在线' && item.carClassesCode in carIcons && 'carMapLeftOnline' in carIcons[item.carClassesCode]){
+                carLeftIconUrl = carIcons[item.carClassesCode]['carMapLeftOnline'].src;
+            }
+        
             return {
                 id:item.carId,
                 latitude:item.latitudeDone,
@@ -415,10 +427,12 @@ class RealTime extends React.Component {
                 urlleft: carLeftIconUrl,
                 pointType:'car',
                 config:{
-                    width:30,
-                    height:30,
-                    markerContentX:-15,
-                    markerContentY:-15,
+                    width:carIconWidth,
+                    height:carIconHeight,
+                    markerContentX: - carIconWidth/2,
+                    markerContentY: - carIconHeight/2,
+                    labelPixelX: carIconWidth/2 ,
+                    labelPixelY: carIconHeight,
                     isAnimation:true,
                     animationDelay:5,
                     autoRotation:  item.carStatus=='行驶在线',
@@ -828,7 +842,7 @@ class RealTime extends React.Component {
         const iconList = Object.keys(carIcons).filter((carType)=>carIcons[carType].carTreeOnline).map((carType)=>{
             return {
                 name:carIcons[carType].name,
-                iconUrl:carIcons[carType].carTreeOnline
+                iconUrl:carIcons[carType].carTreeOnline.src
             }
         })
         const legendBoxProps = {
@@ -889,9 +903,9 @@ class RealTime extends React.Component {
    
                 {
                     videoCfg.showVideo?<div className={style.videoct}>
-                        {
-                            videoCfg.videoAddress.map(ads=>ads?<iframe style={{height:`${100/videoCfg.videoAddress.length}%`}} src={ads}></iframe>:<div className={style.noVideo} style={{height:`${100/videoCfg.videoAddress.length}%`}}><div>暂无视频</div></div>)
-                        }
+                    {
+                        videoCfg.videoAddress.map((ads, index, arr) => <iframe style={{ height: `${arr.length==0?30:100/arr.length}%` }} src={ads}></iframe>)
+                    }
                     </div>:null
                 }
 
@@ -1041,7 +1055,7 @@ class RealTime extends React.Component {
                             bkCfg.dispatchType=='sms'?<div>
                                 <div>
                                     调度模板：{
-                                        bkCfg.smsTemplate.split('%s').map((txt,index)=>{
+                                        (bkCfg.smsTemplate.split('%s') || []).map((txt,index)=>{
                                             if(index){
                                                 return `【文本${index}】${txt}`
                                             }
@@ -1052,7 +1066,7 @@ class RealTime extends React.Component {
                                     }
                                 </div>
                                 {
-                                    bkCfg.smsTemplate.match(/%s/g).map((item,index)=>{
+                                    (bkCfg.smsTemplate.match(/%s/g) || []).map((item,index)=>{
                                         return (
                                             <div key={`msg-txt-${index}`}>文本{index+1}：
                                             <Input type="textarea" value={sendMsgWindow.templateMsg[index]} onChange={(e)=>{

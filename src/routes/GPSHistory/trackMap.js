@@ -44,7 +44,10 @@ class TrackMap extends React.Component{
         if(!deepEqual(this.props.data.carPositions,nextProps.data.carPositions)){
             resetObj.pointList = nextProps.data.carPositions;
         }
-        this.mapPlayer.resetCfg(resetObj);
+        this.map.loadMapComplete && this.map.loadMapComplete.then(()=>{
+            this.mapPlayer.resetCfg(resetObj);
+        });
+        
     }
     play(){
         const {carPositions,carPlayCfg} = this.props.data;
@@ -112,75 +115,80 @@ class MapPlay{
     }
     // 同步实际数据到地图图元
     synDataInMap(){
-        if(this.pointList.length==0 || this.currentPlayIndex===null || this.currentPlayIndex>=this.pointList.length)return;
-        // 画点
-        const deg = this.currentPlayIndex+1<this.pointList.length?this.getIconAngle({
-            x:this.pointList[this.currentPlayIndex].longitudeDone,
-            y:this.pointList[this.currentPlayIndex].latitudeDone,
-        },{
-            x:this.pointList[this.currentPlayIndex+1].longitudeDone,
-            y:this.pointList[this.currentPlayIndex+1].latitudeDone
-        }):0;
-        let currentPoint;
-        if(this.supplementPoints.length>0){
-            currentPoint = this.supplementPoints[this.currentSupplementIndex];
+        if(this.pointList.length==0 ){
+            this.map.GM.isRepetition(this.pointId) && this.map.removeGraphic(this.pointId);
+            this.map.GM.isRepetition(this.lineId) && this.map.removeGraphic(this.lineId);
         }
-        else{
-            currentPoint = this.pointList[this.currentPlayIndex];
-        }
-        const pointObj = {
-            id: this.pointId,
-            latitude:currentPoint.latitudeDone,
-            longitude:currentPoint.longitudeDone,
-            canShowLabel:true,
-            url:GPS_ICON.map.carOn,
-            labelClass:'trackCarLabel',
-            config:{
-                width:30,
-                height:30,            
-                markerContentX:-15,
-                markerContentY:-15,            
-                labelContent:currentPoint.carCode,
-                deg
-            }
-        }
-        if(this.map.GM.isRepetition(this.pointId)){
-            this.map.updatePoint([pointObj]);
-        }
-        else{
-            this.map.addPoint([pointObj],'defined');
-        }
-        // 画线
-        let paths = [];
-        if(this.currentPlayIndex!==null){
-            for(let i=0;i<=this.currentPlayIndex;i++){
-                paths.push([this.pointList[i].longitudeDone,this.pointList[i].latitudeDone])
-            }
-        }
-        if(this.supplementPoints.length>0){
-            for(let i=0;i<=this.currentSupplementIndex;i++){
-                paths.push([this.supplementPoints[i].longitudeDone,this.supplementPoints[i].latitudeDone])
-            }
-        }
-        if(paths.length>1){
-            const lineObj = {
-                id:this.lineId,
-                paths,
-                config:{
-                    lineWidth:3,
-                    color:'blue'
-                }
-            }
-            if(this.map.GM.isRepetition(this.lineId)){
-                this.map.updateLine([lineObj]);
+        else if(typeof(this.currentPlayIndex)=='number' && this.currentPlayIndex<this.pointList.length){
+            // 画点
+            const deg = this.currentPlayIndex+1<this.pointList.length?this.getIconAngle({
+                x:this.pointList[this.currentPlayIndex].longitudeDone,
+                y:this.pointList[this.currentPlayIndex].latitudeDone,
+            },{
+                x:this.pointList[this.currentPlayIndex+1].longitudeDone,
+                y:this.pointList[this.currentPlayIndex+1].latitudeDone
+            }):0;
+            let currentPoint;
+            if(this.supplementPoints.length>0){
+                currentPoint = this.supplementPoints[this.currentSupplementIndex];
             }
             else{
-                this.map.addLine([lineObj],'defined');
+                currentPoint = this.pointList[this.currentPlayIndex];
             }
+            const pointObj = {
+                id: this.pointId,
+                latitude:currentPoint.latitudeDone,
+                longitude:currentPoint.longitudeDone,
+                canShowLabel:true,
+                url:GPS_ICON.map.carOn,
+                labelClass:'trackCarLabel',
+                config:{
+                    width:30,
+                    height:30,            
+                    markerContentX:-15,
+                    markerContentY:-15,            
+                    labelContent:currentPoint.carCode,
+                    deg
+                }
+            }
+            if(this.map.GM.isRepetition(this.pointId)){
+                this.map.updatePoint([pointObj]);
+            }
+            else{
+                this.map.addPoint([pointObj],'defined');
+            }
+            // 画线
+            let paths = [];
+            if(this.currentPlayIndex!==null){
+                for(let i=0;i<=this.currentPlayIndex;i++){
+                    paths.push([this.pointList[i].longitudeDone,this.pointList[i].latitudeDone])
+                }
+            }
+            if(this.supplementPoints.length>0){
+                for(let i=0;i<=this.currentSupplementIndex;i++){
+                    paths.push([this.supplementPoints[i].longitudeDone,this.supplementPoints[i].latitudeDone])
+                }
+            }
+            if(paths.length>1){
+                const lineObj = {
+                    id:this.lineId,
+                    paths,
+                    config:{
+                        lineWidth:3,
+                        color:'blue'
+                    }
+                }
+                if(this.map.GM.isRepetition(this.lineId)){
+                    this.map.updateLine([lineObj]);
+                }
+                else{
+                    this.map.addLine([lineObj],'defined');
+                }
+            }
+            else{
+                this.map.removeGraphic(this.lineId);
+            } 
         }
-        else{
-            this.map.removeGraphic(this.lineId);
-        } 
     }
     // 计算图标转动角度（仅适用于当前车辆图标，仅适用于中国区域）
     getIconAngle(start,end){
@@ -294,12 +302,12 @@ class MapPlay{
     }
     pause(){
         this.clearTimer();
-        if(this.supplementPoints.length!=0){
-            this.currentPlayIndex++;
-            this.supplementPoints = [];
-            this.currentSupplementIndex = null;
-            this.synDataInMap();
-        }
+        // if(this.supplementPoints.length!=0){
+        //     this.currentPlayIndex++;
+        //     this.supplementPoints = [];
+        //     this.currentSupplementIndex = null;
+        //     this.synDataInMap();
+        // }
     }
     stop(){
         this.clearTimer();

@@ -101,8 +101,9 @@ class OilException extends React.Component {
         const t  = this;
         const dispatch = t.props.dispatch;
         const { company, companyTree, handleStatus, handleStatusSelect, carCode, carCodeTree,
-            startDate, endDate, tableData, currentPage, pageSize, totalItems, loading, detail, mapType,
-            wkid, mapServer, detailLoading, setVisiblePoints, handleResult,handleReason } = t.props.oilException;
+            startDate, endDate, tableData, currentPage, pageSize, totalItems, loading, detail,
+             detailLoading, setVisiblePoints, handleResult,handleReason } = t.props.oilException;
+        const { mapType, mapServer, minZoom, maxZoom, wkid, } = t.props.common
         let handleStatusOption = handleStatusSelect.map((item, index) => {
             return <Option value={item.value} key={item.value}>{item.text}</Option>
         })
@@ -110,6 +111,7 @@ class OilException extends React.Component {
             mapType,//地图类型
             wkid,//坐标系编号与mapServer的wkid
             mapServer,
+            minZoom, maxZoom,
             detail,
             detailLoading,
             setVisiblePoints,
@@ -283,6 +285,7 @@ class OilException extends React.Component {
     }
 }
 function mapStateToProps(state) {
-    return { oilException: state.oilException }
+    return { oilException: state.oilException,
+        common: state.common }
 }
 export default connect(mapStateToProps)(OilException)

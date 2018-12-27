@@ -82,7 +82,7 @@ class ExceptionDetailModal extends React.Component {
         const { getFieldDecorator } = this.props.form;
         const { carCode, carClassesName, exceptionTypeName, beforeOilMass, afterOilMass, exceptionOilMass, exceptionTime,
             doReason, exceptionAddress, exceptionTypeCode, beforeTime, afterTime } = this.props.record;
-        const { detail, mapType, wkid, mapServer, setVisiblePoints, detailLoading } = this.props;
+        const { detail, mapType, wkid, mapServer, minZoom, maxZoom, setVisiblePoints, detailLoading } = this.props;
         const { oilLineData, exceptionPointData, oilLineData2 } = detail;
         const oilOption = { //油耗曲线配置(油耗异常的油耗曲线以及隔夜异常的第一天的油耗曲线)
             title: {
@@ -209,6 +209,7 @@ class ExceptionDetailModal extends React.Component {
             mapId: this.props.record.id,
             wkid,
             mapType,
+            mapServer, minZoom, maxZoom,
             mapVisiblePoints: {
                 fitView: 'line',
                 type: 'all'

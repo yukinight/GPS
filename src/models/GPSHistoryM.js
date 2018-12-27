@@ -37,7 +37,9 @@ export default {
     state: {
         // 后台GPS开关配置项
         bkCfg:{
-            isNarrow:false
+            isNarrow:false,
+            // 是否查询优化的历史轨迹
+            rectifyTrack:false,
         },
         // 查询框配置项
         carTreeSearchCfg:{
@@ -110,6 +112,7 @@ export default {
             }],
             startTime:moment().startOf('day'),//moment 时间格式
             endTime:moment().endOf('day'),//moment 时间格式
+            rectifyTrack:false,
         },
         // 车辆轨迹点位
         carPositions:[],
@@ -254,8 +257,16 @@ export default {
         // 设置中心点
         *setMapCfg({ payload }, { call, put, select }){
             const commonState = yield select(({common})=>common);
+            
             yield put({type:'save',payload:{
-                mapCfg: {
+                mapCfg: commonState.mapType=='gmap'?{
+                    mapType:commonState.mapType,
+                    mapCenter:commonState.tenantPosition,
+                    mapServer:commonState.mapServer,
+                    minZoom:commonState.minZoom,
+                    maxZoom:commonState.maxZoom,
+                    wkid:commonState.wkid
+                }:{
                     mapType:commonState.mapType,
                     mapCenter:commonState.tenantPosition
                 }
@@ -426,6 +437,7 @@ export default {
 
             // 查询车辆id,车牌号，开始时间(moment格式)，结束时间(moment格式)，开始时间(字符串)，结束时间(字符串)
             let carId,carCode,startTime,endTime,startTimeStr,endTimeStr;
+            const rectifyTrack = state.trackQueryForm.rectifyTrack;
 
             // 查询现有的某个子时间段
             if(timeSlotIndex!==undefined){
@@ -448,7 +460,7 @@ export default {
                 yield put({
                     type:'getSubPath',
                     payload:{
-                        carId,startTimeStr,endTimeStr
+                        carId,startTimeStr,endTimeStr,rectifyTrack
                     }
                 })
             }
@@ -473,7 +485,8 @@ export default {
                 yield put({
                     type:'getCarPath',
                     payload:{
-                        carId,carCode,startTime,endTime,startTimeStr,endTimeStr
+                        carId,carCode,rectifyTrack,
+                        startTime,endTime,startTimeStr,endTimeStr,
                     }
                 })
             }
@@ -530,7 +543,7 @@ export default {
         },{type: 'takeLatest'}],
         // 获取车辆总轨迹
         getCarPath:[function *({ payload }, { call, put, select }) {
-            const {carId,carCode,startTime,endTime,startTimeStr,endTimeStr} = payload;
+            const {carId,carCode,rectifyTrack,startTime,endTime,startTimeStr,endTimeStr} = payload;
             const commonState = yield select(({common})=>common);
             yield put({
                 type:'save',
@@ -540,6 +553,7 @@ export default {
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
+                rectifyTrack,
                 coordType:commonState.coordType,
                 needTracks:1
             });
@@ -589,7 +603,7 @@ export default {
         },{type: 'takeLatest'}],
         // 获取车辆某个分段轨迹
         getSubPath:[function *({ payload }, { call, put, select }) {
-            const {carId,startTimeStr,endTimeStr} = payload;
+            const {carId,startTimeStr,endTimeStr,rectifyTrack} = payload;
             const commonState = yield select(({common})=>common);
             yield put({
                 type:'save',
@@ -599,6 +613,7 @@ export default {
                 carId,
                 startTime:startTimeStr,
                 endTime:endTimeStr,
+                rectifyTrack,
                 coordType:commonState.coordType,
             });
             yield put({

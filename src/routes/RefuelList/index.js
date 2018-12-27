@@ -19,6 +19,7 @@ class RefuelList extends React.Component{
         dispatch({ type: 'common/getTenantInfo' }).then(() => {
             dispatch({ type: 'refuelList/setMapCfg' });
         })
+        
     }
     onQuery=()=>{
         this.props.dispatch({
@@ -101,8 +102,10 @@ class RefuelList extends React.Component{
         const t = this;
         const dispatch = t.props.dispatch;
         const { company, companyTree, carClassesCode, carClassesSelect, carCode, carCodeTree,
-            startDate, endDate, tableData, currentPage, pageSize, totalItems,loading,detail,mapType,
-            wkid, mapServer, detailLoading,setVisiblePoints} = t.props.refuelList;
+            startDate, endDate, tableData, currentPage, pageSize, totalItems,loading,detail,
+             detailLoading,setVisiblePoints} = t.props.refuelList;
+        const { mapType, mapServer, minZoom, maxZoom, wkid, } = t.props.common
+
         let carClassesOption = carClassesSelect.map((item,index)=>{
             return <Option value={item.code} key={item.code}>{item.text}</Option>
         })
@@ -111,6 +114,8 @@ class RefuelList extends React.Component{
             mapType,//地图类型
             wkid,//坐标系编号与mapServer的wkid
             mapServer,
+            minZoom,
+            maxZoom,
             detail,
             detailLoading,
             setVisiblePoints
@@ -252,6 +257,7 @@ class RefuelList extends React.Component{
         }
         return (
             <div className={styles.normal}>
+                
                <VtxGrid
                     titles={[
                         '作业单位','车辆类型','车牌号','查询时间'
@@ -295,19 +301,23 @@ class RefuelList extends React.Component{
                         disabledDate={t.disabledDate}
                     />
                 </VtxGrid>
+                
                 <div className={styles.buttonContainer}>
                     <VtxExport2 {...exportProps} />
                 </div>
+                
                 <div className={styles.tableContainer}>
                     <VtxDatagrid {...vProps} />
                 </div>
+                
             </div>
         )
     }
 }
 
 function mapStateToProps(state) {
-    return { refuelList: state.refuelList }
+    return { refuelList: state.refuelList,
+            common:state.common }
 }
 export default connect(mapStateToProps)(RefuelList)
 

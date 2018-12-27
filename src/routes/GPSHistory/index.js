@@ -712,6 +712,7 @@ class GPSHistory extends React.Component{
         const leftPanelProps = {
             data:{
                 ...leftPanelCfg,
+                bkCfg,
                 trackQueryForm,
                 carPositions,
                 selectedCarPositionIndex,

@@ -1,6 +1,7 @@
 import u from 'updeep';
-import {VtxUtil} from '../utils/util';
-import {getInfoByTenantId} from '../services/commonIFS';
+import { getBaicPostData, VtxUtil } from '../utils/util';
+import {isArray} from '../utils/alarmCrudUtil';
+import {getInfoByTenantId,getFunctionList,getAlarmTypeLevelList,getTimeList} from '../services/commonIFS';
 import _pickBy from 'lodash/pickBy';
 
 const STATE = {
@@ -8,7 +9,43 @@ const STATE = {
     mapType: 'bmap', //地图类型
     mapName:'百度地图', //地图中文名
     coordType: 'bd09', //地图坐标类型
-    tenantPosition:null //租户配置的中心点
+    tenantPosition:null, //租户配置的中心点
+    timeList:[],//排班时间列表
+    UP_List:{
+        R_CURD_BTN_ALARMLOG_LIST:true,
+        R_CURD_BTN_ALARMLOG_UPDATE:true,
+        R_CURD_BTN_OVERSPEED_ADD:true,
+        R_CURD_BTN_OVERSPEED_LIST:true,
+        R_CURD_BTN_OVERSPEED_UPDATE:true,
+        R_CURD_BTN_OVERSPEED_DELETE:true,
+        R_CURD_BTN_OVERTIME_ADD:true,
+        R_CURD_BTN_OVERTIME_LIST:true,
+        R_CURD_BTN_OVERTIME_UPDATE:true,
+        R_CURD_BTN_OVERTIME_DELETE:true,
+        R_CURD_BTN_OVERLINE_ADD:true,
+        R_CURD_BTN_OVERLINE_LIST:true,
+        R_CURD_BTN_OVERLINE_UPDATE:true,
+        R_CURD_BTN_OVERLINE_DELETE:true,
+        R_CURD_BTN_NOIN_ADD:true,
+        R_CURD_BTN_NOIN_LIST:true,
+        R_CURD_BTN_NOIN_UPDATE:true,
+        R_CURD_BTN_NOIN_DELETE:true,
+        R_CURD_BTN_NOOUT_ADD:true,
+        R_CURD_BTN_NOOUT_LIST:true,
+        R_CURD_BTN_NOOUT_UPDATE:true,
+        R_CURD_BTN_NOOUT_DELETE:true,
+        R_CURD_BTN_OVERSPEEDBZ_ADD:true,
+        R_CURD_BTN_OVERSPEEDBZ_LIST:true,
+        R_CURD_BTN_OVERSPEEDBZ_UPDATE:true,
+        R_CURD_BTN_OVERSPEEDBZ_DELETE:true,
+        R_CURD_BTN_OVERSPEEDBS_ADD:true,
+        R_CURD_BTN_OVERSPEEDBS_LIST:true,
+        R_CURD_BTN_OVERSPEEDBS_UPDATE:true,
+        R_CURD_BTN_OVERSPEEDBS_DELETE:true,
+        R_CURD_BTN_ALARMLEVEL_SAVE:true,
+        R_CURD_BTN_CARSCHEDULER_ADD:true,
+        R_CURD_BTN_CARSCHEDULER_LIST:true
+    }
 }
 
 export default {
@@ -50,6 +87,13 @@ export default {
                     updatedObj.mapType = defaultCfg.mapType;
                     updatedObj.coordType = defaultCfg.coordinate;
                     updatedObj.mapName = defaultCfg.mapName;
+                    // acgis地图额外参数
+                    if(defaultCfg.mapType=='gmap'){
+                        updatedObj.mapServer = JSON.parse(defaultCfg.basicData);
+                        updatedObj.minZoom = parseInt(defaultCfg.minZoom);
+                        updatedObj.maxZoom = parseInt(defaultCfg.maxZoom);
+                        updatedObj.wkid = defaultCfg.wkid;
+                    }
                 }
                 else{
                     console.warn('当前租户未定义地图类型');
@@ -73,7 +117,78 @@ export default {
             else{
                 console.error('调用获取租户信息接口失败');
             }
-        }
+        },
+        //获取按钮权限
+        *getFunctionList({payload},{call,put,select}){
+            const {UP_List} = yield select(({common})=>common);
+            const {data} =yield call(getFunctionList,getBaicPostData({
+                userId:VtxUtil.getUrlParam('userId'),
+                systemCode:VtxUtil.getUrlParam('systemCode')
+            }))
+            if(data){
+                if (data.result===0) {
+                    let newPermission={};
+                    for(let x in UP_List){
+                        let d;
+                        d=data.data.data.filter((item)=>item.code==x);
+                        if(d.length){
+                            newPermission[x]=true;
+                        }else{
+                            newPermission[x]=false;
+                        }
+                    }
+                    yield put({
+                        type:'updateState',
+                        payload:{
+                            UP_List:newPermission
+                        }
+                    })
+                }
+            }
+        },
+        //获取排班列表
+        *getTimeList({ payload }, { call, put,select }) {
+            const state = yield select(({realTime})=>realTime);
+            const {data} = state.bkCfg.isShifts?yield call(getTimeList,getBaicPostData()):'';
+            if(data){
+                if(!data.result){
+                    yield put({
+                        type:'updateState',
+                        payload:{
+                            timeList:isArray(data.data)?data.data:[]
+                        }
+                    })
+                }
+            }
+        },
+        //获取报警等级
+        *getAlarmTypeLevelList({ payload }, { call, put, select }){
+            const {data} = yield call(getAlarmTypeLevelList,getBaicPostData({
+                alarmType:payload.alarmType
+            }));
+            if(data&&data.result===0){
+                let list = isArray(data.data[`${payload.alarmType}`])?data.data[`${payload.alarmType}`]:[];
+                yield put({
+                    type:`${payload.model}/fetch`,
+                    payload:{
+                        alarmList:list.map((item)=>{
+                            return{
+                                key:item.id,
+                                editMode:true,
+                                ...item
+                            }
+                        }),
+                        levelList:list.map((item)=>{
+                            return{
+                                key:item.id,
+                                editMode:true,
+                                ...item
+                            }
+                        })
+                    }
+                })
+            }
+        },
     },
 
     reducers: {

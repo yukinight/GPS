@@ -209,7 +209,8 @@ class BottomPanel extends React.Component{
             <div className={`${t.state.show?style.bottomPanel:style.hiddenBottom} ${st2.bottomArea}`}>
                 <Tabs defaultActiveKey="realData" tabBarExtraContent={RightTopCornerTool} onChange={(tabKey)=>{
                     t.setState({
-                        currentTabKey:tabKey
+                        currentTabKey:tabKey,
+                        show:true
                     })
                     if(tabKey=='oil'){
                         getOilLine();

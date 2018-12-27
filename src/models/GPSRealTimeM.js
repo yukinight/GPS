@@ -55,6 +55,9 @@ export default {
             isNearCar:false,
             // 是否展示转速
             showRpm:false,
+            isShifts:false,
+            // 是否在地图展示时使用车辆图标本身的大小
+            autoIconSize:false
         },
         // 查询框配置项
         searchCfg:{
@@ -176,7 +179,7 @@ export default {
         // 视频配置
         videoCfg:{
             carId:'',
-            videoAddress:['','','',''],
+            videoAddress:[],
             showVideo:false,
         },
         // 车辆图标
@@ -189,7 +192,7 @@ export default {
         hideCarCode:false,//地图的车辆点位是否隐藏车牌号
         autoZoom:false,//勾选树以后地图是否自动缩放
         showLegend:false,//是否显示图例
-        showStatistics:false,//是否显示统计图表
+        showStatistics:false//是否显示统计图表
     },
 
     subscriptions: {
@@ -277,6 +280,13 @@ export default {
                         }
                     })
                 }
+                //余杨珍 add 20181105 是否开启了按钮权限
+                if(cfg.isButtonPermission)
+                {
+                    yield put({
+                        type:'permission/getFunctionList'
+                    })
+                }
             }
         },
         // 设置中心点
@@ -299,8 +309,16 @@ export default {
             //     localStorage.setItem('map_center',JSON.stringify(mapCenter));
             // }
             const commonState = yield select(({common})=>common);
+            
             yield put({type:'save',payload:{
-                mapCfg: {
+                mapCfg: commonState.mapType=='gmap'?{
+                    mapType:commonState.mapType,
+                    mapCenter:commonState.tenantPosition,
+                    mapServer:commonState.mapServer,
+                    minZoom:commonState.minZoom,
+                    maxZoom:commonState.maxZoom,
+                    wkid:commonState.wkid
+                }:{
                     mapType:commonState.mapType,
                     mapCenter:commonState.tenantPosition
                 }
@@ -309,29 +327,56 @@ export default {
         // 获取地图车辆图例
         *getMapIcons({ payload }, { call, put, select }){
             const {data} = yield call(getCarIconsIFS);
-            
+            const state = yield select(({realTime})=>realTime);
+            const ifNeedIconSize = state.bkCfg.autoIconSize;
             if(data && data.data && Array.isArray(data.data.list) && data.data.list.length>0){
-                const carIconObj = (function(iconList){
-                    let carIconObj = {};//筛选后的图标对象
-                    const availabelIconTypes = ['carTreePark','carTreeOnline','carTreeOffline','carMapRightOnline','carMapLeftOnline'];//需要的图标类型
-                    for(let i=0,len=iconList.length;i<len;i++){
-                        const currentIcon = iconList[i];
-                        const imgFileId = (currentIcon.iconId.match(/"id":"(\S+?)"/)||[])[1];//图标文件id
-                        if(imgFileId && availabelIconTypes.indexOf(currentIcon.iconType)!=-1){
-                            if(carIconObj[currentIcon.carTypeId]){
-                                carIconObj[currentIcon.carTypeId][currentIcon.iconType] = data.data.url+imgFileId;
-                            }
-                            else{
-                                carIconObj[currentIcon.carTypeId] = {
-                                    name:currentIcon.carType,
-                                    [currentIcon.iconType]:data.data.url+imgFileId
+                const iconList = data.data.list;
+                
+                let carIconObj = {};//筛选后的图标对象
+                let iconLoading = [];
+                const availabelIconTypes = ['carTreePark','carTreeOnline','carTreeOffline','carMapRightOnline','carMapLeftOnline'];//需要的图标类型
+                
+                for(let i=0,len=iconList.length;i<len;i++){
+                    const currentIcon = iconList[i];
+                    const imgFileId = (currentIcon.iconId.match(/"id":"(\S+?)"/)||[])[1];//图标文件id
+                    if(imgFileId && availabelIconTypes.indexOf(currentIcon.iconType)!=-1){
+                        const imgSrc = data.data.url+imgFileId;
+                        // 获取各图标实际尺寸
+                        if(ifNeedIconSize){ 
+                            iconLoading.push(new Promise((resolve,reject)=>{
+                                let img = new Image();
+                                img.onload = ()=>{
+                                    carIconObj[currentIcon.carTypeId][currentIcon.iconType].width = img.width;
+                                    carIconObj[currentIcon.carTypeId][currentIcon.iconType].height = img.height;
+                                    resolve();
                                 };
-                            }
+                                img.onerror = ()=>{
+                                    reject();
+                                }
+                                img.src = imgSrc;
+                            }))
+                        }
+
+                        if(carIconObj[currentIcon.carTypeId]){
+                            carIconObj[currentIcon.carTypeId][currentIcon.iconType] = {
+                                src:imgSrc
+                            };
+                        }
+                        else{
+                            carIconObj[currentIcon.carTypeId] = {
+                                name:currentIcon.carType,
+                                [currentIcon.iconType]:{
+                                    src:imgSrc
+                                }
+                            };
                         }
                     }
-                    return carIconObj;
-                })(data.data.list);
+                }
 
+                if(iconLoading.length>0){
+                    yield call(()=>Promise.all(iconLoading));
+                }
+                
                 yield put({
                     type:'save',
                     payload:{
@@ -1082,7 +1127,7 @@ export default {
             const {carId} = payload||{};
             if(!carId)return;
             const state = yield select(({realTime})=>realTime);
-            const videoNum = state.videoCfg.videoAddress.length;
+            // const videoNum = state.videoCfg.videoAddress.length;
             
             const {data} = yield call(getCarVideoInfoIFS,{
                 billId:state.carsInfo[carId].carCode
@@ -1092,10 +1137,10 @@ export default {
                 const vd_arr = JSON.parse(data.data);
                 if(vd_arr.length>0){
                     let addressArray = vd_arr.map(item=>`/video/cloud/web/videoMonitor/goToBouncedQueryByChannelId.jhtml?channelId=${item.id}`)
-                    const padNum = videoNum - addressArray.length;//缺少地址用空字符串填充
-                    for(let i=0;i<padNum;i++){
-                        addressArray.push('');
-                    }
+                    // const padNum = videoNum - addressArray.length;//缺少地址用空字符串填充
+                    // for(let i=0;i<padNum;i++){
+                    //     addressArray.push('');
+                    // }
                     yield put({
                         type:'save',
                         payload:{

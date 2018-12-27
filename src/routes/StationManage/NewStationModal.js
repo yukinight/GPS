@@ -171,7 +171,7 @@ class NewStationModal extends React.Component {
     }
     render(){
         const t = this;        
-        const {children,checkType,mapType,wkid} = t.props;
+        const { children, checkType, mapType, wkid, mapServer, minZoom, maxZoom,} = t.props;
         const { code, name, address, latitudeDone, longitudeDone, setShowCenter,
             showCenter,showPoint
         } = t.state;
@@ -202,6 +202,7 @@ class NewStationModal extends React.Component {
             mapId: this.props.record?this.props.record.id: (new Date().getTime())+'',
             wkid,
             mapType,
+            mapServer, minZoom, maxZoom,
             mapCenter:showCenter,
             setCenter:setShowCenter,
             mapPoints:showPoint,
